@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.env
+.env.local
+*.log
+.wrangler-local.err.log
+.wrangler-local.log
+.DS_Store
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

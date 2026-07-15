@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>TrueTeam Cloud - Free VPS Dashboard</title>
+  
+  <!-- Preconnect for fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/assets/styles/design-system.css">
+  <link rel="stylesheet" href="/assets/styles/app.css">
+</head>
+<body>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- App Shell -->
+  <div class="app-shell" id="appShell">
+    <!-- Header -->
+    <header class="header" role="banner">
+      <div class="header__left">
+        <button class="btn btn--ghost btn--sm" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <a href="/" class="header__logo" aria-label="TrueTeam Cloud Home">
+          <span class="header__logo-mark">T</span>
+          <span class="header__logo-text">TrueTeam Cloud</span>
+        </a>
+      </div>
+      
+      <nav class="header__center header__nav" aria-label="Main navigation">
+        <a href="/" class="header__nav-item header__nav-item--active" data-tab="deploy">Deploy</a>
+        <a href="#machines" class="header__nav-item" data-tab="machines">Machines</a>
+        <a href="#shop" class="header__nav-item" data-tab="shop">Shop</a>
+      </nav>
+      
+      <div class="header__right">
+        <div class="header__actions">
+          <button class="btn btn--ghost btn--sm" id="notifBtn" aria-label="Notifications" aria-haspopup="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="badge badge--error badge--sm" id="notifCount" style="display:none">0</span>
+          </button>
+          
+          <div class="header__user" id="userMenuTrigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+            <div class="header__user-avatar" id="userAvatar">T</div>
+            <div class="header__user-info">
+              <span class="header__user-name" id="userName">Sign In</span>
+              <span class="header__user-email" id="userEmail">Welcome to TrueTeam</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar navigation">
+      <div class="sidebar__brand">
+        <a href="/" class="header__logo">
+          <span class="header__logo-mark">T</span>
+          <span class="header__logo-text">TrueTeam Cloud</span>
+        </a>
+      </div>
+      
+      <nav class="sidebar__nav" aria-label="Main menu">
+        <div class="sidebar__section">
+          <div class="sidebar__section-title">Dashboard</div>
+          <a href="#deploy" class="sidebar__item sidebar__item--active" data-tab="deploy">
+            <span class="sidebar__item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </span>
+            <span class="sidebar__item-label">Deploy VPS</span>
+          </a>
+          <a href="#machines" class="sidebar__item" data-tab="machines">
+            <span class="sidebar__item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                <path d="M8 21h8"></path>
+                <path d="M12 17v4"></path>
+              </svg>
+            </span>
+            <span class="sidebar__item-label">My Machines</span>
+          </a>
+        </div>
+        
+        <div class="sidebar__section">
+          <div class="sidebar__section-title">Shop</div>
+          <a href="#shop" class="sidebar__item" data-tab="shop">
+            <span class="sidebar__item-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+            </span>
+            <span class="sidebar__item-label">Shop & Credits</span>
+          </a>
+        </div>
+      </nav>
+      
+      <div class="sidebar__footer">
+        <div class="sidebar__user">
+          <div class="sidebar__user-avatar" id="sidebarUserAvatar">T</div>
+          <div class="sidebar__user-details">
+            <span class="sidebar__user-name" id="sidebarUserName">Guest</span>
+            <span class="sidebar__user-role" id="sidebarUserRole">Sign in to continue</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Main Content -->
+    <main class="main" id="mainContent" role="main">
+      <div class="page">
+        <!-- Page Header -->
+        <header class="page__header">
+          <h1 class="page__title" id="pageTitle">Deploy Free VPS</h1>
+          <p class="page__subtitle" id="pageSubtitle">Create and manage your free VPS instances in minutes</p>
+        </header>
+
+        <!-- Auth Section (shown when not logged in) -->
+        <section class="card" id="authSection" aria-labelledby="authTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="authTitle">Account</h2>
+          </div>
+          <div class="card__content">
+            <div class="tabs tabs--pills" id="authTabs" role="tablist" aria-label="Authentication">
+              <button class="tab tab--active" role="tab" aria-selected="true" aria-controls="loginPanel" id="loginTab" data-tab="login">Sign In</button>
+              <button class="tab" role="tab" aria-selected="false" aria-controls="registerPanel" id="registerTab" data-tab="register">Create Account</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="tab-panel" id="loginPanel" role="tabpanel" aria-labelledby="loginTab" hidden="false">
+              <form id="loginForm" class="form" novalidate>
+                <div class="form-group">
+                  <label class="input-label" for="loginEmail">Email</label>
+                  <div class="input-group">
+                    <span class="input-group__icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                      </svg>
+                    </span>
+                    <input type="email" class="input" id="loginEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="input-label" for="loginPassword">Password</label>
+                  <div class="input-group">
+                    <span class="input-group__icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </span>
+                    <input type="password" class="input" id="loginPassword" name="password" placeholder="Enter password" autocomplete="current-password" required>
+                    <button type="button" class="input-group__action" id="toggleLoginPassword" aria-label="Toggle password visibility">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary btn--block btn--lg" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loading" hidden></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Register Form -->
+            <div class="tab-panel" id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden="true">
+              <form id="registerForm" class="form" novalidate>
+                <div class="form-group">
+                  <label class="input-label" for="regEmail">Email</label>
+                  <div class="input-group">
+                    <span class="input-group__icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                      </svg>
+                    </span>
+                    <input type="email" class="input" id="regEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="input-label" for="regPassword">Password</label>
+                  <div class="input-group">
+                    <span class="input-group__icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </span>
+                    <input type="password" class="input" id="regPassword" name="password" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6">
+                    <button type="button" class="input-group__action" id="toggleRegPassword" aria-label="Toggle password visibility">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <p class="input-hint">At least 6 characters</p>
+                </div>
+                <div class="form-group">
+                  <label class="input-label" for="regConfirmPassword">Confirm Password</label>
+                  <div class="input-group">
+                    <span class="input-group__icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </span>
+                    <input type="password" class="input" id="regConfirmPassword" name="confirmPassword" placeholder="Confirm password" autocomplete="new-password" required>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary btn--block btn--lg" id="registerBtn">
+                    <span class="btn-text">Create Account</span>
+                    <span class="btn-loading" hidden></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Authenticated User Bar -->
+        <section class="card hidden" id="authSuccessSection" aria-labelledby="authSuccessTitle">
+          <div class="card__content" style="padding: var(--space-4) var(--space-6);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <div class="avatar avatar--md" id="authAvatar">T</div>
+                <div>
+                  <p style="font-weight: var(--font-medium); color: var(--color-text-primary);" id="authUserName">Welcome back</p>
+                  <p style="font-size: var(--text-sm); color: var(--color-text-secondary);" id="authUserEmail">user@example.com</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: var(--space-2);">
+                <button class="btn btn--secondary btn--sm" id="logoutBtn">Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Token Section -->
+        <section class="card hidden" id="tokenSection" aria-labelledby="tokenTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="tokenTitle">GitHub Token</h2>
+          </div>
+          <div class="card__content">
+            <div class="alert alert--info" style="margin-bottom: var(--space-5);">
+              <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+              </svg>
+              <div class="alert__content">
+                <p class="alert__message">Your GitHub Personal Access Token is required to deploy VPS instances. Token needs <strong>repo</strong> and <strong>workflow</strong> scopes.</p>
+              </div>
+            </div>
+            <form id="tokenForm" class="form" novalidate>
+              <div class="form-group">
+                <label class="input-label" for="tokenInput">Personal Access Token</label>
+                <div class="input-group">
+                  <span class="input-group__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </span>
+                  <input type="password" class="input" id="tokenInput" name="token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" required>
+                  <button type="button" class="input-group__action" id="toggleToken" aria-label="Toggle token visibility">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+                <p class="input-hint"><a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" style="color: var(--color-brand-400);">Create new token →</a> (needs repo + workflow scopes)</p>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn--primary btn--lg" id="saveTokenBtn">
+                  <span class="btn-text">Save Token</span>
+                  <span class="btn-loading" hidden></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Deploy Section -->
+        <section class="card hidden" id="deploySection" aria-labelledby="deployTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="deployTitle">Deploy VPS</h2>
+          </div>
+          <div class="card__content">
+            <!-- Mode Selector -->
+            <div class="form-group">
+              <label class="input-label">Connection Method</label>
+              <div class="mode-selector" id="modeSelector" role="radiogroup" aria-label="Select VPS connection method">
+                <label class="mode-card mode-card--active" data-mode="vnc" role="radio" aria-checked="true" tabindex="0">
+                  <input type="radio" name="deployMode" value="vnc" checked class="sr-only">
+                  <div class="mode-card__icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                      <path d="M8 21h8"></path>
+                      <path d="M12 17v4"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-card__content">
+                    <h3 class="mode-card__title">noVNC (Browser)</h3>
+                    <p class="mode-card__desc">Access via browser, no client needed. Password: <code>hieudz</code></p>
+                  </div>
+                  <span class="mode-card__check">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </label>
+                
+                <label class="mode-card" data-mode="bore" role="radio" aria-checked="false" tabindex="0">
+                  <input type="radio" name="deployMode" value="bore" class="sr-only">
+                  <div class="mode-card__icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                      <path d="M8 21h8"></path>
+                      <path d="M12 17v4"></path>
+                      <path d="M2 9h20"></path>
+                      <path d="M2 15h20"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-card__content">
+                    <h3 class="mode-card__title">Bore RDP (mstsc)</h3>
+                    <p class="mode-card__desc">Native RDP via bore.pub. User: <code>admin</code> Pass: <code>WindowsRDP2026@</code></p>
+                  </div>
+                  <span class="mode-card__check">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </label>
+                
+                <label class="mode-card" data-mode="ngrok_fast" role="radio" aria-checked="false" tabindex="0">
+                  <input type="radio" name="deployMode" value="ngrok_fast" class="sr-only">
+                  <div class="mode-card__icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M2 12h20"></path>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-card__content">
+                    <h3 class="mode-card__title">Ngrok Fast (Shared Token)</h3>
+                    <p class="mode-card__desc">Pre-configured ngrok token, fastest setup. Recommended for quick access.</p>
+                  </div>
+                  <span class="mode-card__check">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </label>
+                
+                <label class="mode-card" data-mode="ngrok" role="radio" aria-checked="false" tabindex="0">
+                  <input type="radio" name="deployMode" value="ngrok" class="sr-only">
+                  <div class="mode-card__icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 2v20M12 2a15.3 15.3 0 0 1 4 10"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-card__content">
+                    <h3 class="mode-card__title">Ngrok Custom (Your Token)</h3>
+                    <p class="mode-card__desc">Use your own ngrok authtoken for persistent tunnels.</p>
+                  </div>
+                  <span class="mode-card__check">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Ngrok Token Input (conditional) -->
+            <div class="form-group hidden" id="ngrokTokenGroup" aria-hidden="true">
+              <label class="input-label" for="ngrokTokenInput">Ngrok Auth Token</label>
+              <div class="input-group">
+                <span class="input-group__icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </span>
+                <input type="password" class="input" id="ngrokTokenInput" name="ngrokToken" placeholder="2v8...xxxxxx" autocomplete="off">
+                <button type="button" class="input-group__action" id="toggleNgrokToken" aria-label="Toggle token visibility">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+              <p class="input-hint">Get token at <a href="https://dashboard.ngrok.com/get-started/your-authtoken" target="_blank" rel="noopener" style="color: var(--color-brand-400);">dashboard.ngrok.com</a></p>
+              <div class="alert alert--success hidden" id="ngrokTokenSaved">
+                <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <div class="alert__content">
+                  <p class="alert__message">Ngrok token saved successfully!</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deploy Progress -->
+            <div class="hidden" id="deployProgress" aria-live="polite">
+              <div class="progress-steps" role="list" aria-label="Deployment steps">
+                <div class="progress-step progress-step--active" data-step="1" role="listitem">
+                  <div class="progress-step__circle" aria-hidden="true">1</div>
+                  <div class="progress-step__label">Fork Repository</div>
+                </div>
+                <div class="progress-step" data-step="2" role="listitem">
+                  <div class="progress-step__circle" aria-hidden="true">2</div>
+                  <div class="progress-step__label">Configure Secrets</div>
+                </div>
+                <div class="progress-step" data-step="3" role="listitem">
+                  <div class="progress-step__circle" aria-hidden="true">3</div>
+                  <div class="progress-step__label">Run Workflow</div>
+                </div>
+                <div class="progress-step" data-step="4" role="listitem">
+                  <div class="progress-step__circle" aria-hidden="true">4</div>
+                  <div class="progress-step__label">Fetch Connection</div>
+                </div>
+              </div>
+              <div class="progress-bar" style="margin-top: var(--space-5);">
+                <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Deployment progress">
+                  <div class="progress__bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <p class="progress-status" id="progressStatus" style="margin-top: var(--space-2); font-size: var(--text-sm); color: var(--color-text-secondary);">Preparing...</p>
+              </div>
+            </div>
+
+            <!-- Deploy Button -->
+            <div class="form-actions" style="margin-top: var(--space-6);">
+              <button type="button" class="btn btn--primary btn--block btn--lg" id="deployBtn" disabled>
+                <span class="btn-text">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                  </svg>
+                  Start Deployment
+                </span>
+                <span class="btn-loading" hidden></span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Connection Info Section -->
+        <section class="card hidden" id="connectionSection" aria-labelledby="connectionTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="connectionTitle">Connection Info</h2>
+          </div>
+          <div class="card__content">
+            <!-- Scanning State -->
+            <div class="alert alert--info" id="scanningState" role="status" aria-live="polite">
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <div class="spinner" aria-hidden="true"></div>
+                <div>
+                  <p class="alert__title">Scanning for connection info...</p>
+                  <p class="alert__message" id="scanMessage">Waiting for GitHub Actions workflow to complete. This usually takes 2-5 minutes.</p>
+                </div>
+              </div>
+              <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                <button class="btn btn--secondary btn--sm" id="fetchConnectionBtn">Check Now</button>
+                <button class="btn btn--ghost btn--sm" id="cancelScanBtn">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Success State -->
+            <div class="hidden" id="connectionSuccess" aria-live="polite">
+              <div class="alert alert--success" style="margin-bottom: var(--space-5);">
+                <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <div class="alert__content">
+                  <p class="alert__title" id="connectionTitleText">VPS Ready!</p>
+                  <p class="alert__message" id="connectionDetailText">Your connection details are below.</p>
+                </div>
+              </div>
+
+              <div class="connection-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4);">
+                <!-- Connection URL -->
+                <div class="card" style="border-color: var(--color-brand-500);">
+                  <div class="card__content" style="padding: var(--space-4);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3);">
+                      <span style="font-size: var(--text-xs); font-weight: var(--font-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-tertiary);">Connection URL</span>
+                      <span class="badge badge--success badge--dot">Live</span>
+                    </div>
+                    <div style="display: flex; gap: var(--space-2);">
+                      <code class="input" id="connectionUrl" style="flex: 1; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-bg-tertiary); border-color: var(--color-border-primary); padding: var(--space-2) var(--space-3);" readonly></code>
+                      <button class="btn btn--secondary btn--sm" id="copyUrlBtn" aria-label="Copy URL">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--space-2);" id="urlHint">Open in browser for noVNC</p>
+                  </div>
+                </div>
+
+                <!-- Credentials -->
+                <div class="card">
+                  <div class="card__content" style="padding: var(--space-4);">
+                    <span style="font-size: var(--text-xs); font-weight: var(--font-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-tertiary);">Credentials</span>
+                    <div style="display: grid; gap: var(--space-3); margin-top: var(--space-3);">
+                      <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+                        <div>
+                          <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: 2px;">Username</p>
+                          <code class="input" id="connUsername" style="font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-bg-tertiary); border-color: var(--color-border-primary); padding: var(--space-1) var(--space-2);" readonly></code>
+                        </div>
+                        <button class="btn btn--ghost btn--sm copy-btn" data-target="connUsername" aria-label="Copy username">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+                        <div>
+                          <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: 2px;">Password</p>
+                          <code class="input" id="connPassword" style="font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-bg-tertiary); border-color: var(--color-border-primary); padding: var(--space-1) var(--space-2);" readonly></code>
+                        </div>
+                        <button class="btn btn--ghost btn--sm copy-btn" data-target="connPassword" aria-label="Copy password">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Connect (RDP) -->
+                <div class="card hidden" id="quickConnectCard">
+                  <div class="card__content" style="padding: var(--space-4);">
+                    <span style="font-size: var(--text-xs); font-weight: var(--font-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-tertiary);">Quick Connect</span>
+                    <div style="margin-top: var(--space-3);">
+                      <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-2);">Copy this command to connect via Remote Desktop (mstsc):</p>
+                      <div style="display: flex; gap: var(--space-2);">
+                        <code class="input" id="rdpCommand" style="flex: 1; font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-bg-tertiary); border-color: var(--color-border-primary); padding: var(--space-2) var(--space-3);" readonly></code>
+                        <button class="btn btn--secondary btn--sm copy-btn" data-target="rdpCommand" aria-label="Copy RDP command">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions" style="margin-top: var(--space-5);">
+                <button class="btn btn--secondary" id="refreshConnectionBtn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  Refresh
+                </button>
+                <button class="btn btn--ghost" id="deleteMachineBtn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  Delete Machine
+                </button>
+              </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="alert alert--error hidden" id="connectionError">
+              <svg class="alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              <div class="alert__content">
+                <p class="alert__title">Unable to fetch connection</p>
+                <p class="alert__message" id="connectionErrorMsg">The workflow may still be running or encountered an error.</p>
+              </div>
+              <div style="display: flex; gap: var(--space-2);">
+                <button class="btn btn--secondary btn--sm" id="retryConnectionBtn">Retry</button>
+                <button class="btn btn--ghost btn--sm" id="dismissErrorBtn">Dismiss</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Machines Section -->
+        <section class="card hidden" id="machinesSection" aria-labelledby="machinesTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="machinesTitle">My Machines</h2>
+            <span class="badge badge--brand" id="machineCount">0</span>
+          </div>
+          <div class="card__content" style="padding: 0;">
+            <!-- Empty State -->
+            <div class="empty-state" id="machinesEmpty" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-16); text-align: center;">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-text-tertiary); margin-bottom: var(--space-4);">
+                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                <path d="M8 21h8"></path>
+                <path d="M12 17v4"></path>
+              </svg>
+              <h3 style="font-size: var(--text-lg); font-weight: var(--font-semibold); color: var(--color-text-primary); margin-bottom: var(--space-2);">No machines yet</h3>
+              <p style="color: var(--color-text-secondary); margin-bottom: var(--space-5); max-width: 320px;">Deploy your first free VPS to get started. Choose a connection method and click Deploy.</p>
+              <button class="btn btn--primary" id="goToDeployBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+                Deploy Now
+              </button>
+            </div>
+
+            <!-- Machines Grid -->
+            <div class="hidden" id="machinesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--space-4); padding: var(--space-4);">
+              <!-- Machine cards rendered dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Shop Section -->
+        <section class="card hidden" id="shopSection" aria-labelledby="shopTitle">
+          <div class="card__header">
+            <h2 class="card__title" id="shopTitle">Shop & Credits</h2>
+          </div>
+          <div class="card__content">
+            <!-- Credits Display -->
+            <div class="card" style="border-color: var(--color-brand-500); background: var(--color-bg-selected); margin-bottom: var(--space-5);">
+              <div class="card__content" style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: var(--space-3);">
+                  <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700)); display: flex; align-items: center; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 6v6l4 2"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">Your Credits</p>
+                    <p class="font-bold" style="font-size: var(--text-3xl); color: var(--color-brand-400); font-family: var(--font-mono);" id="creditsDisplay">0</p>
+                  </div>
+                </div>
+                <div style="display: flex; gap: var(--space-2);">
+                  <button class="btn btn--secondary btn--sm" id="buyCreditsBtn">Buy Credits</button>
+                  <button class="btn btn--ghost btn--sm" id="creditsHistoryBtn">History</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shop Banner -->
+            <div class="card" id="shopBanner" style="margin-bottom: var(--space-5);">
+              <div class="card__content" style="padding: var(--space-6); text-align: center;">
+                <div class="hidden" id="shopLogoContainer" style="margin-bottom: var(--space-4);">
+                  <img id="shopLogoImg" src="" alt="Shop Logo" style="max-width: 200px; max-height: 100px; border-radius: var(--radius-md); border: 1px solid var(--color-border-primary);">
+                </div>
+                <p id="shopBannerText" style="font-size: var(--text-lg); font-weight: var(--font-medium); color: var(--color-text-secondary); line-height: var(--leading-relaxed);">🚀 TrueTeam Cloud — Free VPS for Everyone!</p>
+              </div>
+            </div>
+
+            <!-- Bank Info -->
+            <div class="card hidden" id="bankInfoCard" style="margin-bottom: var(--space-5);">
+              <div class="card__header">
+                <h3 class="card__title" style="font-size: var(--text-base);">💳 Bank Transfer Info</h3>
+              </div>
+              <div class="card__content">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
+                  <div>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: var(--space-1);">Bank</p>
+                    <p class="font-medium" id="bankNameDisplay" style="color: var(--color-text-primary);">-</p>
+                  </div>
+                  <div>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: var(--space-1);">Account</p>
+                    <p class="font-bold" id="bankAccountDisplay" style="color: var(--color-brand-400); font-family: var(--font-mono);">-</p>
+                  </div>
+                  <div>
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: var(--space-1);">Holder</p>
+                    <p id="bankHolderDisplay" style="color: var(--color-text-primary);">-</p>
+                  </div>
+                </div>
+                <div class="hidden" id="qrCodeContainer" style="margin-top: var(--space-4); text-align: center;">
+                  <img id="qrCodeImg" src="" alt="QR Code for payment" style="max-width: 180px; max-height: 180px; border-radius: var(--radius-md); border: 1px solid var(--color-border-primary);">
+                </div>
+              </div>
+            </div>
+
+            <!-- Products -->
+            <div>
+              <h3 style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3);">Available Products</h3>
+              <div class="products-grid" id="productsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4);">
+                <div class="card empty-state" style="grid-column: 1 / -1; text-align: center; padding: var(--space-10);">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-text-tertiary); margin-bottom: var(--space-3);">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                  </svg>
+                  <p style="color: var(--color-text-secondary);">Loading products...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- User Dropdown Menu -->
+  <div class="dropdown hidden" id="userDropdown" role="menu" aria-label="User menu">
+    <div class="dropdown__menu">
+      <div style="padding: var(--space-3); border-bottom: 1px solid var(--color-border-primary);">
+        <p style="font-weight: var(--font-medium); color: var(--color-text-primary);" id="ddUserName">User</p>
+        <p style="font-size: var(--text-xs); color: var(--color-text-tertiary);" id="ddUserEmail">user@example.com</p>
+      </div>
+      <button class="dropdown__item" role="menuitem" id="ddProfile">
+        <svg class="dropdown__item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Profile
+      </button>
+      <button class="dropdown__item" role="menuitem" id="ddSettings">
+        <svg class="dropdown__item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        Settings
+      </button>
+      <div class="dropdown__divider"></div>
+      <button class="dropdown__item dropdown__item--danger" role="menuitem" id="ddLogout">
+        <svg class="dropdown__item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifications Dropdown -->
+  <div class="dropdown hidden" id="notifDropdown" role="menu" aria-label="Notifications">
+    <div class="dropdown__menu" style="width: 360px; max-height: 400px; overflow-y: auto;">
+      <div class="dropdown__header" style="padding: var(--space-3); border-bottom: 1px solid var(--color-border-primary); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: var(--font-semibold);">Notifications</span>
+        <button class="btn btn--ghost btn--xs" id="clearNotifs">Clear all</button>
+      </div>
+      <div id="notifList" style="padding: var(--space-2);">
+        <div class="empty-state" style="padding: var(--space-8); text-align: center;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-text-tertiary); margin-bottom: var(--space-2);">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">No notifications</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay hidden" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title" id="deleteModalTitle">Delete Machine</h3>
+        <button class="modal__close" id="deleteModalClose" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">Are you sure you want to delete this machine? This will:</p>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--space-2); color: var(--color-text-secondary); font-size: var(--text-sm);">
+          <li style="display: flex; align-items: center; gap: var(--space-2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-red-400)" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            Cancel any running GitHub Actions workflow
+          </li>
+          <li style="display: flex; align-items: center; gap: var(--space-2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-red-400)" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            Disable scheduled triggers
+          </li>
+          <li style="display: flex; align-items: center; gap: var(--space-2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-red-400)" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            Remove from your dashboard
+          </li>
+        </ul>
+        <p style="margin-top: var(--space-4); font-size: var(--text-sm); color: var(--color-text-tertiary);"><strong id="deleteMachineName"></strong> will be permanently removed.</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" id="deleteModalCancel">Cancel</button>
+        <button class="btn btn--danger" id="deleteModalConfirm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Delete Machine
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/assets/scripts/main.js"></script>
+</body>
+</html>

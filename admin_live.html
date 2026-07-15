@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin - TrueTeam Cloud</title>
+<meta name="theme-color" content="#000000"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+	<style>
+	*{margin:0;padding:0;box-sizing:border-box}
+	:root{
+	  --bg:#0e1111;--bg2:#141818;--surface:#1a1e1e;--surface2:#222727;--surface3:#2a3030;
+	  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.18);
+	  --text:#ededed;--text2:#a1a1aa;--text3:#71717a;
+	  --accent:#3ecf8e;--accent2:#2bbd7e;--accent3:#6ee7b7;
+	  --accent-glow:rgba(62,207,142,0.20);
+	  --red:#ef4444;--yellow:#eab308;--green:#22c55e;
+	  --radius:6px;--radius-lg:8px;
+	  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+	  --font-mono:'JetBrains Mono',Consolas,monospace;
+	}
+	body{
+	  font-family:var(--font-sans);
+	  background:var(--bg);color:var(--text);min-height:100vh;padding:16px;
+	  -webkit-font-smoothing:antialiased;
+	  background-attachment:fixed;
+	  letter-spacing:-0.01em;
+	}
+@media(min-width:640px){body{padding:24px;}}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.container{max-width:960px;margin:0 auto;}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* Header */
+.admin-header{text-align:center;margin-bottom:24px;animation:slideUp 0.4s ease both;}
+.admin-header h1{font-size:1.4rem;font-weight:600;color:#fff;letter-spacing:-0.02em;font-family:var(--font-sans);display:flex;align-items:center;justify-content:center;gap:10px;}
+	.admin-header h1 span{
+	  color:var(--accent);
+	}
+.admin-header p{color:var(--text3);font-size:0.78rem;margin-top:4px;}
+/* Cards */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px;margin-bottom:12px;transition:border-color 0.15s ease;
+}
+@media(min-width:640px){.card{padding:24px;margin-bottom:16px;}}
+.card:hover{border-color:var(--border2);}
+.card h2{font-size:0.82rem;font-weight:600;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.02em;}
+/* Inputs */
+input,select{
+  width:100%;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);
+  font-family:var(--font-sans);font-size:16px;
+  margin-bottom:12px;outline:none;transition:all 0.2s;
+}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface2);}
+input::placeholder{color:var(--text3);}
+/* Buttons */
+.btn{
+  padding:9px 18px;border:1px solid transparent;border-radius:var(--radius);cursor:pointer;
+  font-weight:500;font-size:0.82rem;margin-right:6px;margin-bottom:6px;
+  font-family:var(--font-sans);letter-spacing:-0.005em;
+  transition:all 0.12s ease;touch-action:manipulation;
+}
+.btn:active{transform:scale(0.98);}
+	.btn-accent{background:var(--accent);color:#0e1111;border-color:var(--accent);font-weight:600;}
+	.btn-accent:hover{background:var(--accent2);border-color:var(--accent2);box-shadow:0 2px 12px var(--accent-glow);}
+	.btn-red{background:transparent;color:var(--red);border-color:var(--border2);}
+	.btn-red:hover{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06);}
+	.btn-green{background:transparent;color:var(--accent);border-color:var(--border2);}
+	.btn-green:hover{border-color:var(--accent);background:rgba(62,207,142,0.06);}
+	.btn-sm{padding:6px 14px;font-size:0.72rem;border-radius:var(--radius);}
+/* Table - desktop only */
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);}
+th{color:var(--text3);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+td{font-family:'JetBrains Mono',monospace;font-size:0.78rem;word-break:break-all;color:var(--text2);}
+tr{transition:background 0.1s;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+/* Mobile card items - replaces tables on small screens */
+.m-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:10px;
+}
+.m-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+.m-item-email{font-size:0.82rem;font-weight:600;color:var(--text);word-break:break-all;min-width:0;flex:1;}
+.m-item-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);}
+.m-item-label{font-size:0.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;}
+.m-item-value{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text2);text-align:right;word-break:break-all;max-width:60%;}
+.m-item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.m-item-actions .btn-sm{flex:1;text-align:center;min-width:0;}
+/* Badges */
+.badge{padding:3px 10px;border-radius:9999px;font-size:0.64rem;font-weight:600;white-space:nowrap;font-family:var(--font-mono);letter-spacing:0.03em;border:1px solid transparent;}
+.badge-green{background:rgba(62,207,142,0.10);color:var(--accent);border-color:rgba(62,207,142,0.20);}
+.badge-red{background:rgba(239,68,68,0.10);color:var(--red);border-color:rgba(239,68,68,0.20);}
+.badge-gray{background:var(--surface2);color:var(--text3);border-color:var(--border2);}
+.hidden{display:none!important}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}}
+.stat{
+  background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 10px;text-align:center;transition:border-color 0.15s;
+}
+@media(min-width:640px){.stat{padding:20px;}}
+.stat:hover{border-color:var(--border2);}
+.stat-num{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-0.03em;font-family:var(--font-mono);}
+@media(min-width:640px){.stat-num{font-size:2rem;}}
+.stat-label{font-size:0.64rem;color:var(--text3);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+@media(min-width:640px){.stat-label{font-size:0.7rem;margin-top:4px;}}
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:16px;background:var(--bg);padding:3px;border-radius:var(--radius);border:1px solid var(--border);}
+.tabs button{
+  flex:1;padding:10px 6px;border:none;border-radius:4px;
+  background:transparent;color:var(--text3);cursor:pointer;
+  font-weight:500;font-size:0.78rem;transition:all 0.12s;
+  font-family:var(--font-sans);
+}
+@media(min-width:640px){.tabs button{font-size:0.82rem;padding:10px;}}
+.tabs button.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.tabs button:hover:not(.active){color:var(--text2);}
+/* Toast */
+.toast-container{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;width:90%;max-width:360px;}
+@media(min-width:640px){.toast-container{left:auto;right:20px;top:20px;transform:none;}}
+.toast{
+  padding:10px 16px;border-radius:var(--radius);margin-bottom:6px;font-size:0.8rem;font-weight:500;
+  animation:slideIn 0.3s ease;border:1px solid var(--border);text-align:center;
+}
+@media(min-width:640px){.toast{text-align:left;}}
+.toast-success{background:var(--surface);color:var(--accent);}
+.toast-error{background:var(--surface);color:var(--red);border-color:rgba(239,68,68,0.2);}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  display:flex;align-items:flex-end;justify-content:center;z-index:100;
+  animation:fadeIn 0.15s;padding:0;
+}
+@media(min-width:640px){.modal-overlay{align-items:center;padding:20px;}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:24px;width:100%;max-width:400px;
+  box-shadow:0 -8px 32px rgba(0,0,0,0.5);animation:modalSlideUp 0.25s ease;
+}
+@media(min-width:640px){
+  .modal{border-radius:var(--radius-lg);animation:modalIn 0.2s ease;}
+}
+@keyframes modalSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+.modal h3{margin-bottom:16px;color:var(--text);font-weight:600;font-size:1rem;}
+.actions-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+/* Desktop table wrapper, hidden on mobile */
+.desktop-only{display:none;}
+.mobile-only{display:block;}
+@media(min-width:640px){.desktop-only{display:block;}.mobile-only{display:none;}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<div id="modalContainer"></div>
+
+<div class="container">
+  <div class="admin-header">
+    <h1><span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--accent);color:#0e1111;font-size:0.85rem;font-weight:700;box-shadow:0 2px 8px var(--accent-glow);">A</span>TrueTeam <span>Admin</span></h1>
+    <p>Management Dashboard</p>
+    <p style="color:var(--accent);margin-top:2px;font-size:0.72rem;">Credit: Hiếu Dz</p>
+  </div>
+
+  <div class="card" id="loginCard" style="max-width:400px;margin-left:auto;margin-right:auto;">
+    <h2>Authentication</h2>
+    <input type="email" id="adminEmailInput" placeholder="Email (owner account)"/>
+    <input type="password" id="adminPassInput" placeholder="Password"/>
+    <p style="font-size:0.75rem;color:var(--text3);margin-bottom:14px;">Owner account or leave email empty and use master password</p>
+    <button class="btn btn-accent" style="width:100%;" onclick="adminLogin()">Sign in</button>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="stats" id="statsPanel"></div>
+
+	    <div class="tabs">
+	      <button class="active" onclick="switchTab('users',this)">Users</button>
+	      <button onclick="switchTab('tokens',this)">Tokens</button>
+	      <button onclick="switchTab('machines',this)">Machines</button>
+	      <button onclick="switchTab('finance',this)">Finance</button>
+	      <button onclick="switchTab('settings',this)">Settings</button>
+	    </div>
+
+    <div class="card" id="tab-users">
+      <h2>Users</h2>
+      <div class="actions-bar">
+        <button class="btn btn-accent btn-sm" onclick="loadUsers()">Refresh</button>
+      </div>
+      <div id="usersTable" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="card hidden" id="tab-tokens">
+      <h2>Tokens</h2>
+      <div class="actions-bar">
+        <button class="btn btn-accent btn-sm" onclick="loadTokens()">Refresh</button>
+        <button class="btn btn-accent btn-sm" id="checkAllBtn" onclick="checkAllTokens()">Check All</button>
+        <button class="btn btn-green btn-sm" onclick="exportTokens('live')">Export Live</button>
+        <button class="btn btn-red btn-sm" onclick="exportTokens('dead')">Export Dead</button>
+      </div>
+      <div id="tokensTable" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="card hidden" id="tab-machines">
+      <h2>Machines</h2>
+      <div class="actions-bar">
+        <button class="btn btn-accent btn-sm" onclick="loadMachines()">Refresh</button>
+      </div>
+      <div id="machinesTable" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="card hidden" id="tab-finance">
+      <h2>Finance — Credits</h2>
+      <div class="actions-bar">
+        <button class="btn btn-accent btn-sm" onclick="loadCredits()">Refresh</button>
+      </div>
+      <div class="hint-box">
+        <strong>Add Credits</strong> — Enter email and amount, then click Add.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <input type="email" id="creditEmailInput" placeholder="user@example.com" style="flex:2;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.85rem;"/>
+        <input type="number" id="creditAmountInput" placeholder="Amount" style="flex:1;min-width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.85rem;"/>
+        <button class="btn btn-green btn-sm" onclick="addCredits()">Add Credits</button>
+      </div>
+      <div id="creditsTable" style="overflow-x:auto;">
+        <div class="machines-empty">Load credits to see data...</div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="tab-settings">
+      <h2>Settings</h2>
+      <div style="margin-bottom:18px;">
+        <h3 style="font-size:0.95rem;margin-bottom:6px;">⚡ Ngrok Fast — Shared Token</h3>
+        <p style="font-size:0.78rem;color:var(--text2);margin-bottom:10px;">
+          Token này được set vào secret <code>NGROK_AUTH_TOKEN</code> trên fork khi user deploy mode <strong>Ngrok Fast</strong>. Đổi token = mọi deploy mới đều xài token mới.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+          <input type="text" id="ngrokFastInput" placeholder="2v8...xxxxxx" style="flex:1;min-width:240px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.85rem;font-family:monospace;"/>
+          <button class="btn btn-green btn-sm" onclick="saveNgrokFastToken()">Save</button>
+          <button class="btn btn-red btn-sm" onclick="resetNgrokFastToken()">Reset to default</button>
+          <button class="btn btn-accent btn-sm" onclick="loadNgrokFastToken()">Reload</button>
+        </div>
+        <div id="ngrokFastStatus" style="font-size:0.75rem;color:var(--text3);"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var adminToken = '';
+var usersData = [];
+var tokensData = [];
+var machinesData = [];
+var API_BASE = location.hostname.startsWith('admin.') ? '/api/' : '/api/admin/';
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function toast(msg, type) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'success');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+
+		function adminApi(path, data) {
+		  var payload = Object.assign({}, data || {}, { adminToken: adminToken });
+		  return fetch(API_BASE + path, {
+		    method: 'POST',
+		    headers: { 'Content-Type': 'application/json' },
+		    body: JSON.stringify(payload),
+		  }).then(function(r){
+		    return r.json().catch(function(){
+		      return r.text().then(function(t){
+		        throw new Error(t ? t.slice(0,200) : 'HTTP ' + r.status);
+		      });
+		    });
+		  }).then(function(j){
+		    if (j && j.error) throw new Error(j.error);
+		    return j;
+		  });
+		}
+
+	async function adminLogin() {
+	  try {
+	    var email = document.getElementById('adminEmailInput').value.trim();
+	    var pass = document.getElementById('adminPassInput').value;
+	    if (!pass) { alert('Enter password'); return; }
+
+	    var res = await fetch(API_BASE + 'login', {
+	      method: 'POST',
+	      headers: { 'Content-Type': 'application/json' },
+	      body: JSON.stringify({ password: pass, email: email || undefined })
+	    });
+	    
+	    if (!res.ok) {
+	      var errText = await res.text().catch(() => '');
+	      alert('HTTP ' + res.status + ': ' + (errText || 'Unknown error'));
+	      return;
+	    }
+	    
+	    var d = await res.json();
+	    if (d.error) { alert(d.error); return; }
+	    
+	    adminToken = d.adminToken;
+	    document.getElementById('loginCard').classList.add('hidden');
+	    document.getElementById('dashboard').classList.remove('hidden');
+	    loadAll();
+	    alert('Logged in!');
+	  } catch(e) {
+	    alert('Error: ' + e.message);
+	  }
+	}
+
+	function loadAll() {
+	  loadUsers();
+	  loadTokens();
+	  loadMachines();
+	  loadCredits();
+	}
+
+	function switchTab(name, btn) {
+	  ['users','tokens','machines','finance','settings'].forEach(function(t){
+	    document.getElementById('tab-' + t).classList.add('hidden');
+	  });
+	  document.getElementById('tab-' + name).classList.remove('hidden');
+	  document.querySelectorAll('.tabs button').forEach(function(b){ b.classList.remove('active'); });
+	  btn.classList.add('active');
+	  if (name === 'settings') loadNgrokFastToken();
+	  if (name === 'finance') loadCredits();
+}
+
+function loadNgrokFastToken() {
+  var statusEl = document.getElementById('ngrokFastStatus');
+  statusEl.textContent = 'Loading...';
+  adminApi('get-ngrok-fast-token', {}).then(function(d) {
+    document.getElementById('ngrokFastInput').value = d.token || '';
+    statusEl.innerHTML = d.overridden
+      ? '<span style="color:var(--accent3);">● Đang dùng token tuỳ chỉnh (KV override)</span>'
+      : '<span style="color:var(--text3);">○ Đang dùng token mặc định trong code</span>';
+  }).catch(function(e){
+    statusEl.innerHTML = '<span style="color:var(--red);">' + e.message + '</span>';
+  });
+}
+
+function saveNgrokFastToken() {
+  var token = document.getElementById('ngrokFastInput').value.trim();
+  if (!token) return toast('Nhập token','error');
+  if (token.length < 10) return toast('Token quá ngắn','error');
+  adminApi('set-ngrok-fast-token', { token: token }).then(function() {
+    toast('Đã cập nhật Ngrok Fast token');
+    loadNgrokFastToken();
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function resetNgrokFastToken() {
+  if (!confirm('Reset về token mặc định trong code?')) return;
+  adminApi('set-ngrok-fast-token', { reset: true }).then(function() {
+    toast('Đã reset về default');
+    loadNgrokFastToken();
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function tokenBadge(has, status) {
+  if (!has) return '<span class="badge badge-gray">NONE</span>';
+  return '<span class="badge ' + (status === 'dead' ? 'badge-red' : 'badge-green') + '">' + (status === 'dead' ? 'DEAD' : 'LIVE') + '</span>';
+}
+
+	function roleBadge(role) {
+	  if (!role || role === 'user') return '<span class="badge badge-gray">user</span>';
+	  if (role === 'seller') return '<span class="badge badge-green">seller</span>';
+	  if (role === 'owner') return '<span class="badge badge-yellow">owner</span>';
+	  return '<span class="badge badge-gray">' + role + '</span>';
+	}
+
+	function loadUsers() {
+	  adminApi('users').then(function(d) {
+	    usersData = d.users;
+	    updateStats();
+	    // Desktop table
+	    var desk = '<div class="desktop-only"><table><tr><th>Email</th><th>Role</th><th>Token</th><th>Owner</th><th>Machines</th><th>Actions</th></tr>';
+	    d.users.forEach(function(u) {
+	      desk += '<tr><td style="color:var(--text)">' + u.email + '</td>'
+	        + '<td>' + roleBadge(u.role) + '</td>'
+	        + '<td>' + tokenBadge(u.hasToken, u.tokenStatus) + '</td>'
+	        + '<td>' + (u.owner || '-') + '</td>'
+	        + '<td>' + u.machineCount + '</td>'
+	        + '<td>'
+	        + '<button class="btn btn-accent btn-sm" onclick="showResetModal(&quot;' + u.email + '&quot;)">Reset PW</button>'
+	        + (u.role !== 'seller' ? '<button class="btn btn-green btn-sm" onclick="setRole(&quot;' + u.email + '&quot;,&quot;seller&quot;)">Set Seller</button>' : '')
+	        + '<button class="btn btn-red btn-sm" onclick="showDeleteModal(&quot;' + u.email + '&quot;)">Delete</button>'
+	        + (u.hasToken ? '<button class="btn btn-red btn-sm" onclick="revokeToken(&quot;' + u.email + '&quot;)">Revoke</button>' : '')
+	        + '</td></tr>';
+	    });
+	    desk += '</table></div>';
+	    // Mobile cards
+	    var mob = '<div class="mobile-only">';
+	    d.users.forEach(function(u) {
+	      mob += '<div class="m-item">'
+	        + '<div class="m-item-header"><span class="m-item-email">' + u.email + '</span>' + roleBadge(u.role) + tokenBadge(u.hasToken, u.tokenStatus) + '</div>'
+	        + '<div class="m-item-row"><span class="m-item-label">Owner</span><span class="m-item-value">' + (u.owner || '-') + '</span></div>'
+	        + '<div class="m-item-row"><span class="m-item-label">Machines</span><span class="m-item-value">' + u.machineCount + '</span></div>'
+	        + '<div class="m-item-actions">'
+	        + '<button class="btn btn-accent btn-sm" onclick="showResetModal(&quot;' + u.email + '&quot;)">Reset PW</button>'
+	        + (u.role !== 'seller' ? '<button class="btn btn-green btn-sm" onclick="setRole(&quot;' + u.email + '&quot;,&quot;seller&quot;)">Set Seller</button>' : '')
+	        + '<button class="btn btn-red btn-sm" onclick="showDeleteModal(&quot;' + u.email + '&quot;)">Delete</button>'
+	        + (u.hasToken ? '<button class="btn btn-red btn-sm" onclick="revokeToken(&quot;' + u.email + '&quot;)">Revoke</button>' : '')
+	        + '</div></div>';
+	    });
+	    mob += '</div>';
+	    document.getElementById('usersTable').innerHTML = desk + mob;
+	  }).catch(function(e){ toast(e.message, 'error'); });
+	}
+
+	function setRole(email, role) {
+	  if (!confirm('Set role "' + role + '" for ' + email + '?')) return;
+	  adminApi('set-role', { email: email, role: role }).then(function(d) {
+	    toast('Role set: ' + d.email + ' → ' + d.role);
+	    loadUsers();
+	  }).catch(function(e){ toast(e.message, 'error'); });
+	}
+
+function loadTokens() {
+  adminApi('tokens').then(function(d) {
+    tokensData = d.tokens;
+    updateStats();
+    // Desktop
+    var desk = '<div class="desktop-only"><table><tr><th>Email</th><th>GitHub Token</th><th>Ngrok Token</th><th>Owner</th><th>Status</th><th>Reason</th><th>Actions</th></tr>';
+    d.tokens.forEach(function(t) {
+      var hasGh = !!t.githubToken;
+      desk += '<tr><td style="color:var(--text)">' + t.email + '</td>'
+        + '<td style="max-width:200px;font-size:0.72rem;word-break:break-all;">' + (t.githubToken || '-') + '</td>'
+        + '<td style="max-width:200px;font-size:0.72rem;word-break:break-all;color:var(--accent3);">' + (t.ngrokToken || '-') + '</td>'
+        + '<td>' + (t.owner || '-') + '</td>'
+        + '<td><span class="badge ' + (t.status === 'dead' ? 'badge-red' : 'badge-green') + '">' + (t.status === 'dead' ? 'DEAD' : 'LIVE') + '</span></td>'
+        + '<td style="font-size:0.72rem;">' + (t.deadReason || '-') + '</td>'
+        + '<td>' + (hasGh ? '<button class="btn btn-accent btn-sm" onclick="checkOneToken(&quot;' + t.email + '&quot;,this)">Check</button>' : '-') + '</td></tr>';
+    });
+    desk += '</table></div>';
+    // Mobile
+    var mob = '<div class="mobile-only">';
+    d.tokens.forEach(function(t) {
+      var hasGh = !!t.githubToken;
+      mob += '<div class="m-item">'
+        + '<div class="m-item-header"><span class="m-item-email">' + t.email + '</span><span class="badge ' + (t.status === 'dead' ? 'badge-red' : 'badge-green') + '">' + (t.status === 'dead' ? 'DEAD' : 'LIVE') + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">GitHub</span><span class="m-item-value" style="font-size:0.68rem;">' + (t.githubToken ? t.githubToken.slice(0,16) + '...' : '-') + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">Ngrok</span><span class="m-item-value" style="font-size:0.68rem;color:var(--accent3);">' + (t.ngrokToken ? t.ngrokToken.slice(0,16) + '...' : '-') + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">Owner</span><span class="m-item-value">' + (t.owner || '-') + '</span></div>'
+        + (t.deadReason ? '<div class="m-item-row"><span class="m-item-label">Reason</span><span class="m-item-value" style="font-size:0.72rem;">' + t.deadReason + '</span></div>' : '')
+        + (hasGh ? '<div class="m-item-actions"><button class="btn btn-accent btn-sm" onclick="checkOneToken(&quot;' + t.email + '&quot;,this)">Check</button></div>' : '')
+        + '</div>';
+    });
+    mob += '</div>';
+    document.getElementById('tokensTable').innerHTML = desk + mob;
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function loadMachines() {
+  adminApi('machines').then(function(d) {
+    machinesData = d.machines;
+    updateStats();
+    // Desktop
+    var desk = '<div class="desktop-only"><table><tr><th>User</th><th>VNC URL</th><th>Password</th><th>Status</th><th>Created</th></tr>';
+    d.machines.forEach(function(m) {
+      var expired = m.isExpired;
+      var url = m.ngrok_url || '';
+      var urlCell = url ? '<a href="' + url + '" target="_blank" rel="noopener" style="color:var(--accent3);text-decoration:none;word-break:break-all;">' + url + '</a>' : '-';
+      desk += '<tr style="' + (expired ? 'opacity:0.4;' : '') + '">'
+        + '<td style="color:var(--text)">' + m.userEmail + '</td>'
+        + '<td style="max-width:340px;">' + urlCell + '</td>'
+        + '<td>' + (m.password || 'hieudz') + '</td>'
+        + '<td><span class="badge ' + (expired ? 'badge-red' : m.status === 'dead' ? 'badge-red' : 'badge-green') + '">' + (expired ? 'EXPIRED' : m.status === 'dead' ? 'DEAD' : 'ACTIVE') + '</span></td>'
+        + '<td style="font-size:0.72rem;">' + new Date(m.createdAt).toLocaleString() + '</td></tr>';
+    });
+    desk += '</table></div>';
+    // Mobile
+    var mob = '<div class="mobile-only">';
+    d.machines.forEach(function(m) {
+      var expired = m.isExpired;
+      var statusText = expired ? 'EXPIRED' : m.status === 'dead' ? 'DEAD' : 'ACTIVE';
+      var statusClass = expired || m.status === 'dead' ? 'badge-red' : 'badge-green';
+      var url = m.ngrok_url || '';
+      var urlCell = url ? '<a href="' + url + '" target="_blank" rel="noopener" style="color:var(--accent3);text-decoration:none;word-break:break-all;">' + url + '</a>' : '-';
+      mob += '<div class="m-item" style="' + (expired ? 'opacity:0.4;' : '') + '">'
+        + '<div class="m-item-header"><span class="m-item-email">' + m.userEmail + '</span><span class="badge ' + statusClass + '">' + statusText + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">VNC URL</span><span class="m-item-value">' + urlCell + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">Pass</span><span class="m-item-value">' + (m.password || 'hieudz') + '</span></div>'
+        + '<div class="m-item-row"><span class="m-item-label">Created</span><span class="m-item-value" style="font-size:0.7rem;">' + new Date(m.createdAt).toLocaleString() + '</span></div>'
+        + '</div>';
+    });
+    mob += '</div>';
+    document.getElementById('machinesTable').innerHTML = desk + mob;
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function updateStats() {
+  var totalUsers = usersData.length || 0;
+  var liveTokens = tokensData.filter(function(t){ return t.status !== 'dead'; }).length;
+  var deadTokens = tokensData.filter(function(t){ return t.status === 'dead'; }).length;
+  var activeMachines = machinesData.filter(function(m){ return !m.isExpired && m.status !== 'dead'; }).length;
+  document.getElementById('statsPanel').innerHTML =
+    '<div class="stat"><div class="stat-num">' + totalUsers + '</div><div class="stat-label">Total Users</div></div>'
+    + '<div class="stat"><div class="stat-num" style="color:var(--accent3)">' + liveTokens + '</div><div class="stat-label">Live Tokens</div></div>'
+    + '<div class="stat"><div class="stat-num" style="color:var(--red)">' + deadTokens + '</div><div class="stat-label">Dead Tokens</div></div>'
+    + '<div class="stat"><div class="stat-num" style="color:var(--accent3)">' + activeMachines + '</div><div class="stat-label">Active Machines</div></div>';
+}
+
+function showResetModal(email) {
+  document.getElementById('modalContainer').innerHTML =
+    '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'
+    + '<div class="modal"><h3>Reset Password</h3>'
+    + '<p style="color:var(--text2);margin-bottom:14px;font-size:0.85rem;">' + email + '</p>'
+    + '<input type="password" id="newPassInput" placeholder="New password (min 6 chars)"/>'
+    + '<div style="display:flex;gap:8px;"><button class="btn btn-accent" onclick="doResetPassword(&quot;' + email + '&quot;)">Reset</button>'
+    + '<button class="btn" style="background:transparent;color:var(--text3);border:1px solid var(--border);" onclick="closeModal()">Cancel</button></div>'
+    + '</div></div>';
+}
+
+function showDeleteModal(email) {
+  document.getElementById('modalContainer').innerHTML =
+    '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'
+    + '<div class="modal"><h3>Delete User</h3>'
+    + '<p style="color:var(--red);margin-bottom:14px;font-size:0.85rem;">Delete <strong>' + email + '</strong>? This cannot be undone.</p>'
+    + '<div style="display:flex;gap:8px;"><button class="btn" style="background:var(--red);color:#fff;" onclick="doDeleteUser(&quot;' + email + '&quot;)">Delete</button>'
+    + '<button class="btn" style="background:transparent;color:var(--text3);border:1px solid var(--border);" onclick="closeModal()">Cancel</button></div>'
+    + '</div></div>';
+}
+
+function closeModal() {
+  document.getElementById('modalContainer').innerHTML = '';
+}
+
+function doResetPassword(email) {
+  var newPass = document.getElementById('newPassInput').value;
+  if (!newPass || newPass.length < 6) return toast('Min 6 characters', 'error');
+  adminApi('reset-password', { email: email, newPassword: newPass }).then(function() {
+    closeModal();
+    toast('Password reset for ' + email);
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function doDeleteUser(email) {
+  adminApi('delete-user', { email: email }).then(function() {
+    closeModal();
+    loadUsers();
+    toast('User deleted: ' + email);
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function revokeToken(email) {
+  if (!confirm('Revoke GitHub token for ' + email + '?')) return;
+  adminApi('revoke-token', { email: email }).then(function() {
+    loadUsers();
+    loadTokens();
+    toast('Token revoked for ' + email);
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function checkAllTokens() {
+  var btn = document.getElementById('checkAllBtn');
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = 'Checking...';
+  adminApi('check-tokens', {}).then(function(d) {
+    toast('Checked ' + d.total + ' · ' + d.aliveCount + ' live · ' + d.deadCount + ' dead');
+    loadTokens();
+    loadUsers();
+  }).catch(function(e){ toast(e.message, 'error'); }).finally(function() {
+    btn.disabled = false;
+    btn.textContent = orig;
+  });
+}
+
+function checkOneToken(email, btn) {
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = '...';
+  adminApi('check-tokens', { emails: [email] }).then(function(d) {
+    var r = (d.results && d.results[0]) || {};
+    if (r.alive) toast('LIVE · ' + email + (r.login ? ' (' + r.login + ')' : ''));
+    else toast('DEAD · ' + email + ' · ' + (r.reason || ''), 'error');
+    loadTokens();
+    loadUsers();
+  }).catch(function(e){
+    toast(e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  });
+}
+
+	function exportTokens(type) {
+	  var filtered = tokensData.filter(function(t) {
+	    return type === 'live' ? t.status !== 'dead' : t.status === 'dead';
+	  });
+	  var text = filtered.map(function(t){ return t.githubToken; }).join('
+');
+	  var blob = new Blob([text], { type: 'text/plain' });
+	  var a = document.createElement('a');
+	  a.href = URL.createObjectURL(blob);
+	  a.download = 'tokens-' + type + '.txt';
+	  a.click();
+	  toast('Exported ' + filtered.length + ' ' + type + ' tokens');
+	}
+
+	// ===== Admin: Finance / Credits =====
+	function loadCredits() {
+	  adminApi('credits-log', {}).then(function(d){
+	    var entries = d.entries || [];
+	    var desk = '<div class="desktop-only"><table><tr><th>Email</th><th>Credits</th></tr>';
+	    entries.forEach(function(e){
+	      desk += '<tr><td style="color:var(--text)">' + esc(e.email) + '</td><td><span class="badge badge-green">' + (e.credits || 0) + '</span></td></tr>';
+	    });
+	    desk += '</table></div>';
+	    var mob = '<div class="mobile-only">';
+	    entries.forEach(function(e){
+	      mob += '<div class="m-item"><div class="m-item-header"><span class="m-item-email">' + esc(e.email) + '</span><span class="badge badge-green">' + (e.credits || 0) + '</span></div></div>';
+	    });
+	    if (!entries.length) mob += '<div class="machines-empty">No credits data</div>';
+	    mob += '</div>';
+	    document.getElementById('creditsTable').innerHTML = desk + mob;
+	  }).catch(function(e){ toast(e.message, 'error'); });
+	}
+
+	function addCredits() {
+	  var email = document.getElementById('creditEmailInput').value.trim();
+	  var amount = document.getElementById('creditAmountInput').value.trim();
+	  if (!email || !amount) return toast('Enter email and amount', 'error');
+	  var parsed = parseInt(amount, 10);
+	  if (isNaN(parsed) || parsed <= 0) return toast('Invalid amount', 'error');
+	  adminApi('add-credits', { email: email, amount: parsed }).then(function(d){
+	    toast('Added ' + parsed + ' credits to ' + d.email + ' (now: ' + d.credits + ')');
+	    document.getElementById('creditEmailInput').value = '';
+	    document.getElementById('creditAmountInput').value = '';
+	    loadCredits();
+	  }).catch(function(e){ toast(e.message, 'error'); });
+	}
+	</script>
+	</body>
+	</html>

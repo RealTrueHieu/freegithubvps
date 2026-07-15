@@ -1,0 +1,42 @@
+name = "free-vps-github"
+main = "src/worker.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[rules]]
+type = "Data"
+globs = ["**/*.webp"]
+fallthrough = true
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[vars]
+APP_NAME = "TrueTeam Cloud"
+
+# Routes: main domain + admin subdomain + shop subdomain
+routes = [
+  { pattern = "trueteamcommunity.dpdns.org/*", zone_name = "trueteamcommunity.dpdns.org" },
+  { pattern = "admin.trueteamcommunity.dpdns.org/*", zone_name = "trueteamcommunity.dpdns.org" },
+  { pattern = "shop.trueteamcommunity.dpdns.org/*", zone_name = "trueteamcommunity.dpdns.org" }
+]
+
+[[kv_namespaces]]
+binding = "USERS_KV"
+id = "b2ad99c8654c4b6f9d56eeb72209bbc6"
+preview_id = "36776056032e457d87260c8de422e608"
+
+[[r2_buckets]]
+bucket_name = "free-vps-tokens"
+binding = "TOKENS_R2"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "free-vps-db"
+database_id = "fcf50956-58e2-484e-9ac6-338bef51d439"
+
+# Cron trigger: tự động xoá máy hết hạn mỗi 30 phút
+[triggers]
+crons = ["*/30 * * * *"]

@@ -1,0 +1,4 @@
+ALTER TABLE users ADD COLUMN username TEXT;
+ALTER TABLE users ADD COLUMN avatar_key TEXT;
+ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN profile_updated_at INTEGER;
