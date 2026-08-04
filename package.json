@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "kv:create": "wrangler kv namespace create USERS_KV"
+    "kv:create": "wrangler kv namespace create USERS_KV",
+    "test": "node test-machine-type.js",
+    "test:machine-type": "node test-machine-type.js"
   },
   "dependencies": {
     "blakejs": "^1.2.1",

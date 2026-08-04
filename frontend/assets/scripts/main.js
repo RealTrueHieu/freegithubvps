@@ -646,20 +646,39 @@ function renderMachines() {
   });
 }
 
+function classifyMachineClient(machine = {}) {
+  const repoLow = String(machine.repo || '').toLowerCase();
+  const display = String(machine.ngrok_url || machine.url || '').trim();
+  let modeKey = null;
+  if (repoLow.includes('ngrok')) modeKey = 'ngrok';
+  else if (repoLow.includes('bore')) modeKey = 'bore';
+  else if (repoLow.includes('novnc') || repoLow.includes('vnc')) modeKey = 'vnc';
+  if (!modeKey) {
+    if (/^https?:\/\//i.test(display)) modeKey = 'vnc';
+    else if (/ngrok\.io/i.test(display) || /\.tcp\./i.test(display)) modeKey = 'ngrok';
+    else if (/bore\.pub/i.test(display) || /^[^\s/]+:\d+$/.test(display)) modeKey = 'bore';
+    else modeKey = 'vnc';
+  }
+  const labels = { vnc: 'noVNC', bore: 'Bore RDP', ngrok: 'Ngrok RDP', ngrok_fast: 'Ngrok Fast' };
+  return {
+    mode: modeKey,
+    label: labels[modeKey] || modeKey,
+    isVnc: modeKey === 'vnc',
+    isBore: modeKey === 'bore',
+    isNgrok: modeKey === 'ngrok' || modeKey === 'ngrok_fast',
+    isRdp: modeKey === 'bore' || modeKey === 'ngrok' || modeKey === 'ngrok_fast',
+  };
+}
+
 function createMachineCard(machine) {
   const createdAt = machine.createdAt || machine.created_at || 0;
   const elapsed = Date.now() - createdAt;
   const remaining = 5 * 60 * 60 * 1000 - elapsed;
   const isExpired = remaining <= 0;
-  const isRdp = machine.repo?.includes('bore') || machine.repo?.includes('ngrok');
-  
-  const modeNames = {
-    'vps-novnc': 'noVNC',
-    'vps-bore': 'Bore RDP',
-    'vps-ngrok': 'Ngrok RDP',
-  };
-  const mode = modeNames[machine.repo] || machine.repo;
-  
+  const classified = classifyMachineClient(machine);
+  const isRdp = classified.isRdp;
+  const mode = classified.label || machine.repo;
+
   const statusColor = machine.status === 'active' ? 'success' : machine.status === 'dead' ? 'error' : 'warning';
   const statusText = machine.status === 'active' ? 'Online' : machine.status === 'dead' ? 'Offline' : 'Unknown';
   
