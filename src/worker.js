@@ -5,6 +5,7 @@
 import nacl from 'tweetnacl';
 import blake from 'blakejs';
 import { WF_VNC_B64, WF_BORE_B64, WF_NGROK_B64 } from './workflows.js';
+import { classifyMachine, inferModeFromRepo } from './machine-type.js';
 import COMMUNITY_ART from '../frontend/assets/community-art.webp';
 import CONSOLE_SHELL from '../frontend/console-shell.html';
 
@@ -348,7 +349,15 @@ async function saveUserField(email, field, value, env) {
 // ===== D1 Machine helpers =====
 async function getUserMachines(email, env) {
   const { results } = await env.DB.prepare('SELECT * FROM machines WHERE user_email = ? ORDER BY created_at DESC').bind(email).all();
-  return results || [];
+  return (results || []).map((m) => {
+    const c = classifyMachine(m);
+    return {
+      ...m,
+      mode: c.mode,
+      modeLabel: c.label,
+      isRdp: c.isRdp,
+    };
+  });
 }
 
 async function addMachine(machine, env) {
@@ -878,12 +887,18 @@ async function adminGetMachines(env) {
     'SELECT * FROM machines ORDER BY created_at DESC'
   ).all();
 
-  const machines = (results || []).map(m => ({
-    ...m,
-    userEmail: m.user_email,
-    createdAt: m.created_at,
-    isExpired: (Date.now() - m.created_at) > MACHINE_TTL_MS,
-  }));
+  const machines = (results || []).map(m => {
+    const c = classifyMachine(m);
+    return {
+      ...m,
+      userEmail: m.user_email,
+      createdAt: m.created_at,
+      isExpired: (Date.now() - m.created_at) > MACHINE_TTL_MS,
+      mode: c.mode,
+      modeLabel: c.label,
+      isRdp: c.isRdp,
+    };
+  });
 
   return { success: true, machines, total: machines.length };
 }
@@ -1763,8 +1778,7 @@ async function handleDeleteMachine({ sessionToken, machineId, token }, env) {
       }
 
       // Xoá output file để fetch sau này không trả URL chết
-      const repoLow = (repoName || '').toLowerCase();
-      const inferredMode = repoLow.includes('ngrok') ? 'ngrok' : repoLow.includes('bore') ? 'bore' : 'vnc';
+      const inferredMode = inferModeFromRepo(repoName) || 'vnc';
       // Both ngrok and ngrok_fast use the same outputFile (rdp_info.txt from vps-ngrok repo)
       const outFile = MODES[inferredMode === 'ngrok' ? 'ngrok_fast' : inferredMode]?.outputFile || MODES[inferredMode].outputFile;
       const branch = 'main';
@@ -1864,10 +1878,8 @@ async function handleRefreshMachine({ token, sessionToken, machineId }, env) {
   ).bind(machineId, email).first();
   if (!machine) throw new Error('Machine not found');
 
-  // Detect mode từ repo name
-  const repoLow = (machine.repo || '').toLowerCase();
-  // Both ngrok and ngrok_fast use same workflow/output file
-  const inferredMode = repoLow.includes('ngrok') ? 'ngrok' : repoLow.includes('bore') ? 'bore' : 'vnc';
+  // Detect mode from repo name (shared classifier)
+  const inferredMode = inferModeFromRepo(machine.repo) || 'vnc';
   const data = await handleRdpInfo({
     token, owner: machine.owner, repo: machine.repo, sessionToken, mode: inferredMode,
   }, env);
@@ -3423,27 +3435,44 @@ function renderMachines() {
     const remaining = MACHINE_TTL - elapsed;
     const isExpired = remaining <= 0;
     const display = m.ngrok_url || '';
-    const isVnc = /^https?:\\/\\//i.test(display);
-    const isBore = !isVnc && /:\\d+$/.test(display);
+    // Classify by repo first, then endpoint URL (fixes ngrok mislabeled as Bore)
+    const repoLow = String(m.repo || '').toLowerCase();
+    let machineMode = null;
+    if (repoLow.includes('ngrok')) machineMode = 'ngrok';
+    else if (repoLow.includes('bore')) machineMode = 'bore';
+    else if (repoLow.includes('novnc') || repoLow.includes('vnc')) machineMode = 'vnc';
+    if (!machineMode) {
+      if (/^https?:\\/\\//i.test(display)) machineMode = 'vnc';
+      else if (/ngrok\\.io/i.test(display) || /\\.tcp\\./i.test(display)) machineMode = 'ngrok';
+      else if (/bore\\.pub/i.test(display) || /^[^\\s/]+:\\d+$/.test(display)) machineMode = 'bore';
+      else machineMode = 'vnc';
+    }
+    const isVnc = machineMode === 'vnc';
+    const isBore = machineMode === 'bore';
+    const isNgrok = machineMode === 'ngrok' || machineMode === 'ngrok_fast';
+    const isRdp = isBore || isNgrok;
+    const modeLabel = isNgrok ? 'Ngrok RDP' : isBore ? 'Bore RDP' : isVnc ? 'noVNC' : '';
+    const defaultUser = isNgrok ? 'DucthengTechDz' : isBore ? 'admin' : '(noVNC)';
+    const defaultPass = isNgrok ? 'W1nd0ws-P4ssw0rd-2025!' : isBore ? 'WindowsRDP2026@' : 'hieudz';
     const copyBtn = '<button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector(&quot;.machine-field-value&quot;).textContent,this)">Copy</button>';
 
     let body;
-    if (isBore) {
+    if (isRdp) {
       const mstsc = 'mstsc /v:' + display;
-      body = '<div class="machine-field"><div><div class="machine-field-label">Username</div><div class="machine-field-value">' + (m.username || 'admin') + '</div></div>' + copyBtn + '</div>'
-        + '<div class="machine-field"><div><div class="machine-field-label">Password</div><div class="machine-field-value">' + (m.password || 'WindowsRDP2026@') + '</div></div>' + copyBtn + '</div>'
+      body = '<div class="machine-field"><div><div class="machine-field-label">Username</div><div class="machine-field-value">' + (m.username || defaultUser) + '</div></div>' + copyBtn + '</div>'
+        + '<div class="machine-field"><div><div class="machine-field-label">Password</div><div class="machine-field-value">' + (m.password || defaultPass) + '</div></div>' + copyBtn + '</div>'
         + '<div class="machine-field"><div><div class="machine-field-label">Address</div><div class="machine-field-value" style="word-break:break-all;">' + display + '</div></div>' + copyBtn + '</div>'
         + '<div class="machine-field"><div><div class="machine-field-label">Quick Connect</div><div class="machine-field-value" style="font-family:JetBrains Mono,monospace;font-size:0.78rem;">' + mstsc + '</div></div>' + copyBtn + '</div>'
-        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">🖥️ Mở Remote Desktop (mstsc) → dán địa chỉ → đăng nhập <strong style="color:var(--accent3)">admin</strong> / <strong style="color:var(--accent3)">' + (m.password || 'WindowsRDP2026@') + '</strong>.</div>';
+        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">🖥️ Mở Remote Desktop (mstsc) → dán địa chỉ → đăng nhập <strong style="color:var(--accent3)">' + (m.username || defaultUser) + '</strong> / <strong style="color:var(--accent3)">' + (m.password || defaultPass) + '</strong>.</div>';
     } else {
-      body = '<div class="machine-field"><div><div class="machine-field-label">VNC Password</div><div class="machine-field-value">' + (m.password || 'hieudz') + '</div></div>' + copyBtn + '</div>'
+      body = '<div class="machine-field"><div><div class="machine-field-label">VNC Password</div><div class="machine-field-value">' + (m.password || defaultPass) + '</div></div>' + copyBtn + '</div>'
         + '<div class="machine-field"><div><div class="machine-field-label">VNC URL</div><div class="machine-field-value" style="word-break:break-all;"><a href="' + display + '" target="_blank" rel="noopener" style="color:var(--accent3);text-decoration:none;">' + display + '</a></div></div>' + copyBtn + '</div>'
-        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">⚠️ Mở link bằng trình duyệt → nhập mật khẩu <strong style="color:var(--accent3)">' + (m.password || 'hieudz') + '</strong> để vào noVNC.</div>';
+        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">⚠️ Mở link bằng trình duyệt → nhập mật khẩu <strong style="color:var(--accent3)">' + (m.password || defaultPass) + '</strong> để vào noVNC.</div>';
     }
 
     return '<div class="machine-card ' + (isExpired ? 'expired' : '') + '">'
       + '<div class="machine-header">'
-      + '<span class="machine-id">#' + m.id + (isBore ? ' · Bore RDP' : isVnc ? ' · noVNC' : '') + '</span>'
+      + '<span class="machine-id">#' + m.id + (modeLabel ? ' · ' + modeLabel : '') + '</span>'
       + '<span class="machine-timer ' + (isExpired ? 'expired' : 'active') + '" data-created="' + ca + '">'
       + (isExpired ? 'EXPIRED' : formatTime(remaining))
       + '</span></div>'
