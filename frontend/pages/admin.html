@@ -243,6 +243,7 @@ body{padding:0;background:var(--bg);overflow-x:hidden;}
 .role-select{width:100%;height:30px;padding:0 20px 0 0;margin:0;border:0;background:transparent;color:var(--text);color-scheme:dark;box-shadow:none;font:600 .66rem var(--font-sans);cursor:pointer;}.role-select option{background:#211e29;color:#f5f2fa;}.role-select option:disabled{color:#7f778d;}.role-select:focus{border:0;background:transparent;box-shadow:none;}
 .secret-preview{font:500 .63rem var(--font-mono);color:var(--text3);white-space:nowrap;}
 .secret-toggle{max-width:100%;padding:4px 7px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text3);display:inline-flex;align-items:center;gap:6px;font:500 .61rem var(--font-mono);cursor:pointer;}.secret-toggle:hover{color:var(--text2);border-color:var(--border2);}.secret-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.secret-wrap{display:inline-flex;align-items:center;gap:4px;max-width:100%;}
 .record-title{display:block;color:var(--text);font:600 .7rem var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.record-sub{display:block;margin-top:3px;color:var(--text3);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .empty-panel{padding:50px 20px;text-align:center;color:var(--text3);}.empty-panel strong{display:block;margin-top:10px;color:var(--text2);font-size:.76rem;}.empty-panel span{display:block;margin-top:4px;font-size:.64rem;}
 .login-view{min-height:calc(100vh - 64px);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.75fr);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);}
@@ -605,7 +606,35 @@ function tokenPreview(value, label) {
   if (!value) return '<span class="secret-preview">Chưa có</span>';
   var text = String(value);
   var masked = '•••• ' + text.slice(-6);
-  return '<button type="button" class="secret-toggle" data-secret="' + esc(text) + '" data-masked="' + esc(masked) + '" data-revealed="false" onclick="toggleSecret(this)" aria-label="Hiện ' + esc(label || 'mã bí mật') + '"><span class="secret-text">' + esc(masked) + '</span><i data-lucide="eye" class="icon icon-sm" aria-hidden="true">*</i></button>';
+  var lbl = esc(label || 'mã bí mật');
+  return '<span class="secret-wrap">'
+    + '<button type="button" class="secret-toggle" data-secret="' + esc(text) + '" data-masked="' + esc(masked) + '" data-revealed="false" onclick="toggleSecret(this)" aria-label="Hiện ' + lbl + '"><span class="secret-text">' + esc(masked) + '</span><i data-lucide="eye" class="icon icon-sm" aria-hidden="true">*</i></button>'
+    + '<button type="button" class="icon-btn" data-secret="' + esc(text) + '" onclick="copySecret(this)" aria-label="Sao chép ' + lbl + '" title="Sao chép ' + lbl + '"><i data-lucide="copy" class="icon icon-sm" aria-hidden="true">*</i></button>'
+    + '</span>';
+}
+
+/* Sao chep secret (GitHub/Ngrok token, mat khau may) tu data-secret.
+   Dung chung copyText neu co, fallback clipboard + execCommand. */
+function copySecret(button) {
+  var text = button && button.dataset ? (button.dataset.secret || '') : '';
+  if (!text) { toast('Chưa có dữ liệu để sao chép', 'error'); return; }
+  if (typeof copyText === 'function') { copyText(text, button); return; }
+  function done() { toast('Đã sao chép!'); }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); }
+    catch (e) { toast('Sao chép thất bại', 'error'); }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
 }
 
 function toggleSecret(button) {
