@@ -171,7 +171,10 @@
                   <label for="tokenInput">Token truy cập cá nhân</label>
                   <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" required />
                 </div>
-                <button type="submit" class="btn btn-primary" id="saveTokenBtn">Lưu token</button>
+                <div class="button-row">
+                  <button type="submit" class="btn btn-primary" id="saveTokenBtn">Lưu token</button>
+                  <button type="button" class="btn btn-secondary" id="copyTokenBtn" onclick="copyGithubToken(this)">Sao chép token</button>
+                </div>
               </form>
             </section>
 

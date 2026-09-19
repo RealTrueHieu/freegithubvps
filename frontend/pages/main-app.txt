@@ -1027,6 +1027,21 @@ async function fetchRdpInfoWithRetry() {
   }
 }
 
+/* Sao chep GitHub token dang luu (state.token, fallback o input).
+   Neu chua co token that (vd input dang hien ••• sau restore) thi bao loi. */
+function copyGithubToken(btn) {
+  var token = (state.token || '').trim();
+  var input = document.getElementById('tokenInput');
+  var inputVal = input ? input.value.trim() : '';
+  var isMasked = inputVal && inputVal.replace(/•/g, '') === '';
+  if (!token || isMasked) {
+    if (inputVal && !isMasked) token = inputVal;
+    else { toast('Chưa có token để sao chép', 'error'); return; }
+  }
+  if (inputVal && !isMasked && inputVal !== token) token = inputVal;
+  copyText(token, btn || document.getElementById('copyTokenBtn'));
+}
+
 function copyText(text, btn) {
   if (!btn) { btn = document.activeElement; }
   function onSuccess() {
