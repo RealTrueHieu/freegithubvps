@@ -1,0 +1,1059 @@
+/* ============================================================
+   TrueTeam Cloud - web chinh (main-app.js)
+   Viet hoa toan bo UI + fix theo yeu cau rework 2026-09-18.
+   - Giu nguyen: moi API path/method/field, localStorage key,
+     element id + ten ham JS hien co, link Discord/Telegram,
+     flow retry/timer, password mac dinh hien thi.
+   - Moi: escHtml, confirmDialog.
+   - Da xoa: switchMainTab, loadShopConfig (ban main),
+     switchToCentered, state.selectedShopItem, var mainTab.
+   - File nay KHONG dung backtick / ${} de khi tich hop vao
+     template literal trong worker.js khong bi vo.
+   ============================================================ */
+const MACHINE_TTL = 5 * 60 * 60 * 1000; // 5 tieng
+const APP_VERSION = '6.0.0';
+let state = { authMode: 'login', email: '', username: '', avatarUrl: '', role: 'user', token: '', owner: '', repo: 'vps-novnc', sessionToken: '', machines: [], mode: 'vnc', ngrokTokenSaved: false };
+
+/* Escape HTML de chong stored-XSS khi gan innerHTML du lieu dong */
+function escHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* Hộp thoại xác nhận dùng chung, thay confirm() native.
+   Tra ve Promise<boolean>. Tu dong fallback confirm() neu thieu markup. */
+var confirmCleanup = null;
+function confirmDialog(msg) {
+  return new Promise(function(resolve) {
+    var modal = document.getElementById('confirmModal');
+    var msgEl = document.getElementById('confirmModalMsg');
+    var okBtn = document.getElementById('confirmModalOk');
+    var cancelBtn = document.getElementById('confirmModalCancel');
+    if (!modal || !msgEl || !okBtn || !cancelBtn) {
+      resolve(window.confirm(msg));
+      return;
+    }
+    msgEl.textContent = msg;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    function done(value) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+      modal.removeEventListener('click', onBackdrop);
+      confirmCleanup = null;
+      resolve(value);
+    }
+    function onOk() { done(true); }
+    function onCancel() { done(false); }
+    function onKey(e) { if (e.key === 'Escape') done(false); }
+    function onBackdrop(e) { if (e.target === modal) done(false); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    document.addEventListener('keydown', onKey);
+    modal.addEventListener('click', onBackdrop);
+    confirmCleanup = done;
+    setTimeout(function(){ try { okBtn.focus(); } catch (e) {} }, 0);
+  });
+}
+
+function syncAccountChrome(profile) {
+  profile = profile || {};
+  var email = profile.email || state.email || '';
+  var username = profile.username || state.username || (email ? email.split('@')[0] : 'Khách');
+  var avatarUrl = profile.avatarUrl || '';
+  var role = profile.role || state.role || 'user';
+  var label = document.getElementById('accountLabel');
+  var avatar = document.getElementById('accountAvatar');
+  var avatarImage = document.getElementById('accountAvatarImage');
+  var roleLabel = document.getElementById('accountRole');
+  var authCard = document.getElementById('authCard');
+  var initials = username ? username.slice(0, 2).toUpperCase() : 'TT';
+
+  state.email = email;
+  state.username = username;
+  state.avatarUrl = avatarUrl;
+  state.role = role;
+
+  if (label) label.textContent = username;
+  if (avatar) {
+    avatar.textContent = initials;
+    avatar.classList.toggle('hidden', !!avatarUrl);
+  }
+  if (avatarImage) {
+    avatarImage.src = avatarUrl || '';
+    avatarImage.classList.toggle('hidden', !avatarUrl);
+  }
+  if (roleLabel) {
+    roleLabel.textContent = role;
+    roleLabel.dataset.role = role;
+  }
+
+  var profileUsername = document.getElementById('profileUsername');
+  var profileEmail = document.getElementById('profileEmail');
+  var profileRole = document.getElementById('profileRole');
+  var profileFallback = document.getElementById('profileAvatarFallback');
+  var profileImage = document.getElementById('profileAvatarImage');
+  var removeAvatarBtn = document.getElementById('removeAvatarBtn');
+  if (profileUsername) profileUsername.value = username === 'Khách' ? '' : username;
+  if (profileEmail) profileEmail.textContent = email || '-';
+  if (profileRole) {
+    profileRole.textContent = role;
+    profileRole.dataset.role = role;
+  }
+  if (profileFallback) {
+    profileFallback.textContent = initials;
+    profileFallback.classList.toggle('hidden', !!avatarUrl);
+  }
+  if (profileImage) {
+    profileImage.src = avatarUrl || '';
+    profileImage.classList.toggle('hidden', !avatarUrl);
+  }
+  if (removeAvatarBtn) removeAvatarBtn.disabled = !avatarUrl;
+  if (authCard) authCard.classList.toggle('authenticated', !!email);
+}
+
+function openProfileModal() {
+  if (!state.sessionToken) {
+    toast('Đăng nhập để chỉnh sửa hồ sơ', 'error');
+    return;
+  }
+  syncAccountChrome(state);
+  switchProfileTab('profile', document.getElementById('profileTabButton'));
+  document.getElementById('profileModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ var u = document.getElementById('profileUsername'); if (u) u.focus(); }, 0);
+}
+
+function closeProfileModal() {
+  var m = document.getElementById('profileModal');
+  if (m) m.classList.add('hidden');
+  document.body.style.overflow = '';
+  var f = document.getElementById('passwordForm');
+  if (f) f.reset();
+}
+
+function switchProfileTab(tab, button) {
+  document.querySelectorAll('.profile-tabs button').forEach(function(item){ item.classList.remove('active'); });
+  if (button) button.classList.add('active');
+  var p = document.getElementById('profileTabPanel');
+  if (p) p.classList.toggle('hidden', tab !== 'profile');
+  var s = document.getElementById('securityTabPanel');
+  if (s) s.classList.toggle('hidden', tab !== 'security');
+}
+
+function applyProfileData(data) {
+  syncAccountChrome(data.profile || data);
+}
+
+async function saveProfile() {
+  var username = document.getElementById('profileUsername').value;
+  setLoading('saveProfileBtn', true);
+  try {
+    var data = await api('profile', { sessionToken: state.sessionToken, username: username });
+    applyProfileData(data);
+    toast('Đã cập nhật hồ sơ');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+  setLoading('saveProfileBtn', false);
+}
+
+async function uploadProfileAvatar(file) {
+  if (!file) return;
+  setLoading('uploadAvatarBtn', true);
+  try {
+    var formData = new FormData();
+    formData.append('sessionToken', state.sessionToken);
+    formData.append('file', file);
+    var response = await fetch('/api/profile/avatar', { method: 'POST', body: formData });
+    var data = await response.json();
+    if (!response.ok || data.error) throw new Error(data.error || 'Tải ảnh đại diện thất bại');
+    applyProfileData(data);
+    toast('Đã cập nhật ảnh đại diện');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+  document.getElementById('profileAvatarFile').value = '';
+  setLoading('uploadAvatarBtn', false);
+}
+
+async function removeProfileAvatar() {
+  setLoading('removeAvatarBtn', true);
+  try {
+    var data = await api('profile/remove-avatar', { sessionToken: state.sessionToken });
+    applyProfileData(data);
+    toast('Đã gỡ ảnh đại diện');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+  setLoading('removeAvatarBtn', false);
+  syncAccountChrome(state);
+}
+
+async function changeProfilePassword() {
+  var currentPassword = document.getElementById('currentPassword').value;
+  var newPassword = document.getElementById('newPassword').value;
+  var confirmation = document.getElementById('confirmNewPassword').value;
+  if (newPassword !== confirmation) {
+    toast('Mật khẩu mới không khớp', 'error');
+    return;
+  }
+  setLoading('changePasswordBtn', true);
+  try {
+    var data = await api('change-password', {
+      sessionToken: state.sessionToken,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    });
+    state.sessionToken = data.sessionToken;
+    localStorage.setItem('sessionToken', data.sessionToken);
+    applyProfileData(data);
+    document.getElementById('passwordForm').reset();
+    toast('Đã đổi mật khẩu. Các phiên khác đã bị đăng xuất.');
+  } catch (error) {
+    toast(error.message, 'error');
+  }
+  setLoading('changePasswordBtn', false);
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    var pm = document.getElementById('profileModal');
+    if (pm && !pm.classList.contains('hidden')) closeProfileModal();
+  }
+});
+
+function selectMode(m) {
+  state.mode = m;
+  var modes = [
+    { id: 'Vnc',       val: 'vnc' },
+    { id: 'Bore',      val: 'bore' },
+    { id: 'NgrokFast', val: 'ngrok_fast' },
+    { id: 'Ngrok',     val: 'ngrok' },
+  ];
+  modes.forEach(function(k){
+    var rb = document.getElementById('mode'+k.id);
+    var card = document.getElementById('modeCard'+k.id);
+    if (rb) rb.checked = (m === k.val);
+    if (card) card.classList.toggle('active', m === k.val);
+  });
+  state.repo = (m === 'bore') ? 'vps-bore'
+    : (m === 'ngrok' || m === 'ngrok_fast') ? 'vps-ngrok'
+    : 'vps-novnc';
+  // Chỉ hiện ô nhập token cho ngrok custom
+  var box = document.getElementById('ngrokTokenBox');
+  if (box) box.classList.toggle('hidden', m !== 'ngrok');
+  var title = document.getElementById('rdpCardTitle');
+  var hint = document.getElementById('rdpHint');
+  if (title && hint) {
+    if (m === 'bore') {
+      title.textContent = 'Lấy thông tin RDP';
+      hint.innerHTML = '⚠️ Tài khoản: <strong style="color:var(--accent3)">admin</strong> · Mật khẩu: <strong style="color:var(--accent3)">WindowsRDP2026@</strong> · mstsc /v:bore.pub:PORT';
+    } else if (m === 'ngrok' || m === 'ngrok_fast') {
+      title.textContent = 'Lấy thông tin Ngrok';
+      hint.innerHTML = '⚠️ Tài khoản: <strong style="color:var(--accent3)">DucthengTechDz</strong> · Mật khẩu: <strong style="color:var(--accent3)">W1nd0ws-P4ssw0rd-2025!</strong> · mstsc /v:X.tcp.ap.ngrok.io:PORT';
+    } else {
+      title.textContent = 'Lấy liên kết noVNC';
+      hint.innerHTML = '⚠️ Mật khẩu noVNC mặc định: <strong style="color:var(--accent3)">hieudz</strong>';
+    }
+  }
+}
+
+// ===== Banner functions =====
+function closeBanner() {
+  document.getElementById('adBanner').classList.add('hidden');
+  document.body.classList.remove('banner-visible');
+  localStorage.setItem('bannerClosed', '1');
+}
+function onBannerClick() {
+  window.open('https://discord.gg/CTyUJsMNSr', '_blank');
+}
+// Restore banner state
+(function(){
+  if (!localStorage.getItem('bannerClosed')) {
+    document.body.classList.add('banner-visible');
+  } else {
+    document.getElementById('adBanner').classList.add('hidden');
+  }
+})();
+
+async function saveNgrokToken() {
+  var token = document.getElementById('ngrokTokenInput').value.trim();
+  if (!token) { toast('Cần token Ngrok', 'error'); return; }
+  var statusEl = document.getElementById('ngrokTokenStatus');
+  setLoading('saveNgrokBtn', true);
+  try {
+    await api('save-ngrok-token', { sessionToken: state.sessionToken, ngrokToken: token });
+    state.ngrokTokenSaved = true;
+    statusEl.innerHTML = '✅ Đã lưu — sẵn sàng triển khai chế độ ngrok';
+    statusEl.style.color = 'var(--accent3)';
+    toast('Đã lưu token Ngrok');
+  } catch (e) {
+    statusEl.innerHTML = '❌ ' + escHtml(e.message);
+    statusEl.style.color = 'var(--red)';
+    toast(e.message, 'error');
+  }
+  setLoading('saveNgrokBtn', false);
+}
+let retryCount = 0;
+let maxRetries = 90;
+let retryTimer = null;
+let timerInterval = null;
+
+function switchToSplit() {
+  var g = document.getElementById('mainGrid');
+  g.classList.remove('centered');
+  g.classList.add('split');
+  document.querySelector('.app').classList.add('has-machines');
+}
+
+function typewrite(el, text, speed) {
+  speed = speed || 30;
+  el.textContent = '';
+  var cursor = document.createElement('span');
+  cursor.className = 'typewriter-cursor';
+  el.appendChild(cursor);
+  var i = 0;
+  function tick() {
+    if (i < text.length) {
+      el.insertBefore(document.createTextNode(text[i]), cursor);
+      i++;
+      setTimeout(tick, speed);
+    } else {
+      setTimeout(function(){ if (cursor.parentNode) cursor.remove(); }, 1500);
+    }
+  }
+  tick();
+}
+
+async function logout() {
+  var token = state.sessionToken;
+  if (token) {
+    try {
+      await api('logout', { sessionToken: token });
+    } catch (e) { /* best-effort: cu dang xuat local du backend loi */ }
+  }
+  try { localStorage.removeItem('sessionToken'); } catch (e) {}
+  location.reload();
+}
+
+// ===== Notifications =====
+var notifications = JSON.parse(localStorage.getItem('notifs') || '[]');
+
+function getMention() {
+  return state.email ? ('@' + state.email.split('@')[0]) : '@user';
+}
+
+function addNotif(msg, icon) {
+  icon = icon || '&#128276;';
+  notifications.unshift({ msg: msg, icon: icon, time: Date.now(), read: false });
+  if (notifications.length > 50) notifications = notifications.slice(0, 50);
+  localStorage.setItem('notifs', JSON.stringify(notifications));
+  renderNotifs();
+  // Browser notification (skip on mobile / SW-only platforms)
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    var opts = { body: msg.replace(/<[^>]*>/g, ''), icon: '/favicon.ico' };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(function(reg){
+        if (reg && reg.showNotification) {
+          reg.showNotification('Free VPS GitHub', opts);
+        } else {
+          try { new Notification('Free VPS GitHub', opts); } catch(e) {}
+        }
+      }).catch(function(){
+        try { new Notification('Free VPS GitHub', opts); } catch(e) {}
+      });
+    } else {
+      try { new Notification('Free VPS GitHub', opts); } catch(e) {}
+    }
+  }
+}
+
+// ===== Update Check =====
+function checkForUpdate() {
+  var lastVersion = localStorage.getItem('app_version');
+  if (lastVersion && lastVersion !== APP_VERSION) {
+    addNotif(getMention() + ' Đã cập nhật <b>v' + APP_VERSION + '</b>! ✨ Thêm tùy chọn <b>Bore RDP</b> (mstsc) bên cạnh noVNC, nút <b>🔄 Làm mới</b> port trên mỗi máy, nút <b>Xóa</b> giờ tự hủy workflow đang chạy, sửa YAML upstream khiến dispatch lỗi. Tải lại (Ctrl+R) để dùng.', '&#127881;');
+  }
+  localStorage.setItem('app_version', APP_VERSION);
+}
+
+function renderNotifs() {
+  var list = document.getElementById('notifList');
+  var countEl = document.getElementById('notifCount');
+  var unread = notifications.filter(function(n){ return !n.read; }).length;
+  if (unread > 0) {
+    countEl.textContent = unread > 9 ? '9+' : unread;
+    countEl.classList.remove('hidden');
+  } else {
+    countEl.classList.add('hidden');
+  }
+  if (notifications.length === 0) {
+    list.innerHTML = '<div class="notif-empty">Chưa có thông báo nào</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(function(n, i) {
+    var ago = formatAgo(Date.now() - n.time);
+    var styledMsg = n.msg.replace(/@(\\w+)/g, '<span class="notif-mention">@$1</span>');
+    return '<div class="notif-item' + (n.read ? '' : ' unread') + '" onclick="markRead(' + i + ')">'
+      + '<span class="notif-icon">' + n.icon + '</span>' + styledMsg
+      + '<div class="notif-time">' + ago + '</div></div>';
+  }).join('');
+}
+
+function formatAgo(ms) {
+  if (ms < 0) return 'vừa xong';
+  var s = Math.floor(ms / 1000);
+  if (s < 60) return 'vừa xong';
+  var m = Math.floor(s / 60);
+  if (m < 60) return m + ' phút trước';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + ' giờ trước';
+  return Math.floor(h / 24) + ' ngày trước';
+}
+
+function toggleNotifPanel() {
+  var panel = document.getElementById('notifPanel');
+  panel.classList.toggle('hidden');
+}
+
+function markRead(i) {
+  if (notifications[i]) notifications[i].read = true;
+  localStorage.setItem('notifs', JSON.stringify(notifications));
+  renderNotifs();
+}
+
+function clearNotifs() {
+  notifications = [];
+  localStorage.setItem('notifs', '[]');
+  renderNotifs();
+  toggleNotifPanel();
+}
+
+// Request browser notification permission
+if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+renderNotifs();
+checkForUpdate();
+// Init mode card highlight (default: vnc)
+setTimeout(function(){ try { selectMode(state.mode || 'vnc'); } catch(e){} }, 0);
+
+// ===== Machines rendering =====
+function renderMachines() {
+  var list = document.getElementById('machinesList');
+  if (!state.machines || state.machines.length === 0) {
+    list.innerHTML = '<div class="machines-empty">Chưa có máy nào. Hãy triển khai một máy!</div>';
+    hide('machinesCard');
+    return;
+  }
+  show('machinesCard');
+  var now = Date.now();
+  list.innerHTML = state.machines.map(function(m) {
+    var ca = m.createdAt || m.created_at;
+    var elapsed = now - ca;
+    var remaining = MACHINE_TTL - elapsed;
+    var isExpired = remaining <= 0;
+    var display = m.ngrok_url || '';
+    var isVnc = /^https?:\/\//i.test(display);
+    var isBore = !isVnc && /:\d+$/.test(display);
+    var copyBtn = '<button class="copy-btn" onclick="copyText(this.previousElementSibling.querySelector(&quot;.machine-field-value&quot;).textContent,this)">Sao chép</button>';
+
+    var body;
+    if (isBore) {
+      var mstsc = 'mstsc /v:' + display;
+      body = '<div class="machine-field"><div><div class="machine-field-label">Tên đăng nhập</div><div class="machine-field-value">' + escHtml(m.username || 'admin') + '</div></div>' + copyBtn + '</div>'
+        + '<div class="machine-field"><div><div class="machine-field-label">Mật khẩu</div><div class="machine-field-value">' + escHtml(m.password || 'WindowsRDP2026@') + '</div></div>' + copyBtn + '</div>'
+        + '<div class="machine-field"><div><div class="machine-field-label">Địa chỉ</div><div class="machine-field-value" style="word-break:break-all;">' + escHtml(display) + '</div></div>' + copyBtn + '</div>'
+        + '<div class="machine-field"><div><div class="machine-field-label">Kết nối nhanh</div><div class="machine-field-value" style="font-family:JetBrains Mono,monospace;font-size:0.78rem;">' + escHtml(mstsc) + '</div></div>' + copyBtn + '</div>'
+        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">🖥️ Mở Remote Desktop (mstsc) → dán địa chỉ → đăng nhập <strong style="color:var(--accent3)">admin</strong> / <strong style="color:var(--accent3)">' + escHtml(m.password || 'WindowsRDP2026@') + '</strong>.</div>';
+    } else {
+      var safeUrl = escHtml(display);
+      body = '<div class="machine-field"><div><div class="machine-field-label">Mật khẩu VNC</div><div class="machine-field-value">' + escHtml(m.password || 'hieudz') + '</div></div>' + copyBtn + '</div>'
+        + '<div class="machine-field"><div><div class="machine-field-label">Liên kết VNC</div><div class="machine-field-value" style="word-break:break-all;"><a href="' + safeUrl + '" target="_blank" rel="noopener" style="color:var(--accent3);text-decoration:none;">' + escHtml(display) + '</a></div></div>' + copyBtn + '</div>'
+        + '<div style="font-size:0.72rem;color:var(--text3);margin:6px 2px 8px;">⚠️ Mở liên kết bằng trình duyệt → nhập mật khẩu <strong style="color:var(--accent3)">' + escHtml(m.password || 'hieudz') + '</strong> để vào noVNC.</div>';
+    }
+
+    var statusLabel = m.status === 'dead' ? 'Ngoại tuyến' : m.status === 'active' ? 'Trực tuyến' : 'Không rõ';
+    var statusDot = m.status === 'dead' ? 'dead' : m.status === 'active' ? 'alive' : 'unknown';
+    var typeLabel = isBore ? ' · Bore RDP' : isVnc ? ' · noVNC' : '';
+    var mid = escHtml(String(m.id));
+
+    return '<div class="machine-card ' + (isExpired ? 'expired' : '') + '">'
+      + '<div class="machine-header">'
+      + '<span class="machine-id">#' + mid + typeLabel + '</span>'
+      + '<span class="machine-timer ' + (isExpired ? 'expired' : 'active') + '" data-created="' + ca + '">'
+      + (isExpired ? 'HẾT HẠN' : formatTime(remaining))
+      + '</span></div>'
+      + body
+      + '<div class="machine-actions">'
+      + '<div class="machine-status" id="ping-status-' + mid + '"><span class="status-dot ' + statusDot + '"></span>' + statusLabel + '</div>'
+      + '<button class="btn-ping" id="refresh-btn-' + mid + '" onclick="refreshMachine(&quot;' + mid + '&quot;)" title="Lấy port/URL mới (Bore đổi port mỗi phiên 5h)">🔄 Làm mới</button>'
+      + '<button class="btn-ping" id="ping-btn-' + mid + '" onclick="pingMachine(&quot;' + mid + '&quot;)">Ping</button>'
+      + '<button class="btn-delete" onclick="deleteMachine(&quot;' + mid + '&quot;)">Xóa</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function refreshMachine(id) {
+  var btn = document.getElementById('refresh-btn-' + id);
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '🔄 ...';
+  try {
+    var data = await api('refresh-machine', { token: state.token, sessionToken: state.sessionToken, machineId: id });
+    if (data.machines) state.machines = data.machines;
+    renderMachines();
+    if (data.found) {
+      toast('Đã cập nhật thông tin mới');
+    } else {
+      toast('Workflow chưa ghi thông tin — đợi thêm vài phút', 'error');
+    }
+  } catch (e) {
+    toast(e.message || 'Làm mới thất bại', 'error');
+  }
+  btn = document.getElementById('refresh-btn-' + id);
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 Làm mới'; }
+}
+
+function formatTime(ms) {
+  if (ms <= 0) return '00:00:00';
+  var s = Math.floor(ms / 1000);
+  var h = Math.floor(s / 3600);
+  var mi = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  return String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+
+var notifiedMachines = JSON.parse(localStorage.getItem('notifiedMachines') || '{}');
+
+function startTimers() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    var timers = document.querySelectorAll('.machine-timer[data-created]');
+    var now = Date.now();
+    var needRerender = false;
+    timers.forEach(function(el) {
+      var created = parseInt(el.dataset.created);
+      var remaining = MACHINE_TTL - (now - created);
+      var card = el.closest('.machine-card');
+      var mid = card ? card.querySelector('.machine-id') : null;
+      var machineLabel = mid ? mid.textContent : '';
+
+      if (remaining <= 0) {
+        if (!el.classList.contains('expired')) {
+          needRerender = true;
+          // Notify expired
+          if (!notifiedMachines[created + '_expired']) {
+            notifiedMachines[created + '_expired'] = true;
+            localStorage.setItem('notifiedMachines', JSON.stringify(notifiedMachines));
+            addNotif(getMention() + ' Máy ' + escHtml(machineLabel) + ' đã <b>hết hạn</b>! Hãy triển khai máy mới để tiếp tục.', '&#9940;');
+          }
+        }
+      } else {
+        el.textContent = formatTime(remaining);
+        // Notify 1h warning
+        if (remaining <= 60 * 60 * 1000 && !notifiedMachines[created + '_1h']) {
+          notifiedMachines[created + '_1h'] = true;
+          localStorage.setItem('notifiedMachines', JSON.stringify(notifiedMachines));
+          addNotif(getMention() + ' Máy ' + escHtml(machineLabel) + ' hết hạn sau <b>1 giờ</b> nữa!', '&#9888;');
+        }
+        // Notify 30min warning
+        if (remaining <= 30 * 60 * 1000 && !notifiedMachines[created + '_30m']) {
+          notifiedMachines[created + '_30m'] = true;
+          localStorage.setItem('notifiedMachines', JSON.stringify(notifiedMachines));
+          addNotif(getMention() + ' Máy ' + escHtml(machineLabel) + ' hết hạn sau <b>30 phút</b> nữa! Hãy lưu công việc của bạn.', '&#9888;');
+        }
+        // Notify 5min warning
+        if (remaining <= 5 * 60 * 1000 && !notifiedMachines[created + '_5m']) {
+          notifiedMachines[created + '_5m'] = true;
+          localStorage.setItem('notifiedMachines', JSON.stringify(notifiedMachines));
+          addNotif(getMention() + ' Máy ' + escHtml(machineLabel) + ' hết hạn sau <b>5 phút</b> nữa! Sắp hết giờ rồi!', '&#128308;');
+        }
+      }
+    });
+    if (needRerender) renderMachines();
+  }, 1000);
+}
+
+async function deleteMachine(id) {
+  var ok = await confirmDialog('Xóa máy + hủy workflow đang chạy + tắt trigger hẹn giờ?');
+  if (!ok) return;
+  try {
+    var data = await api('delete-machine', { sessionToken: state.sessionToken, machineId: id, token: state.token });
+    state.machines = data.machines;
+    renderMachines();
+    toast('Đã xóa máy + hủy workflow');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function pingMachine(id) {
+  var btn = document.getElementById('ping-btn-' + id);
+  var statusEl = document.getElementById('ping-status-' + id);
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  statusEl.innerHTML = '<span class="status-dot unknown"></span>Đang kiểm tra...';
+  try {
+    var data = await api('ping-machine', { token: state.token, sessionToken: state.sessionToken, machineId: id });
+    if (data.alive) {
+      statusEl.innerHTML = '<span class="status-dot alive"></span>Trực tuyến';
+      // Update local state
+      var found = state.machines.find(function(x){ return String(x.id) === String(id); });
+      if (found) found.status = 'active';
+    } else {
+      statusEl.innerHTML = '<span class="status-dot dead"></span>Ngoại tuyến';
+      var found2 = state.machines.find(function(x){ return String(x.id) === String(id); });
+      if (found2) found2.status = 'dead';
+    }
+    toast(data.alive ? 'Máy đang trực tuyến!' : 'Máy đang ngoại tuyến');
+    if (!data.alive) {
+      addNotif(getMention() + ' Máy <b>' + escHtml(String(id)) + '</b> hiện đang <b>ngoại tuyến</b>.', '&#128308;');
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<span class="status-dot dead"></span>Lỗi';
+    toast(e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Ping';
+}
+
+// ===== Init: restore session on page load =====
+async function restoreSession() {
+  var saved = localStorage.getItem('sessionToken');
+  if (!saved) return;
+  try {
+    var data = await api('session', { sessionToken: saved });
+    state.sessionToken = saved;
+    state.email = data.email;
+    state.machines = data.machines || [];
+    syncAccountChrome(data.profile || data);
+
+    setStepDone(1);
+    document.getElementById('authSuccess').classList.remove('hidden');
+    typewrite(document.getElementById('authSuccessText'), 'Đã đăng nhập: ' + data.email);
+    document.getElementById('authBtn').classList.add('hidden');
+
+    if (data.githubToken) {
+      state.token = data.githubToken;
+      document.getElementById('tokenInput').value = '••••••••••••••••';
+      setStepDone(2);
+      show('tokenCard');
+      show('deployCard');
+      setStepActive(3);
+    } else {
+      show('tokenCard');
+      setStepActive(2);
+    }
+
+    if (data.owner) state.owner = data.owner;
+
+    if (state.token) {
+      show('rdpCard');
+      setStepActive(5);
+    }
+
+    renderMachines();
+    startTimers();
+    if (state.machines && state.machines.length > 0) switchToSplit();
+    toast('Đã khôi phục phiên đăng nhập!');
+  } catch (e) {
+    localStorage.removeItem('sessionToken');
+  }
+}
+restoreSession();
+
+function toast(msg, type) {
+  if (type !== 'error' && type !== 'success') type = 'success';
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  c.appendChild(t);
+  typewrite(t, msg, 20);
+  setTimeout(function() { t.remove(); }, 4000);
+}
+
+async function api(path, data) {
+  var res = await fetch('/api/' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  var json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    var text = await res.text().catch(function() { return ''; });
+    throw new Error(text ? 'Máy chủ: ' + text.slice(0, 200) : 'HTTP ' + res.status);
+  }
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function setStepDone(n) {
+  var el = document.getElementById('step' + n);
+  if (el) el.className = 'step done';
+}
+function setStepActive(n) {
+  var el = document.getElementById('step' + n);
+  if (el) el.className = 'step active';
+}
+
+function setLoading(btnId, loading) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn._html = btn.innerHTML;
+    btn.innerHTML = '<div class="spinner"></div>';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn._html || btn.innerHTML;
+  }
+}
+
+function setAuthMode(mode) {
+  state.authMode = mode;
+  var btns = document.querySelectorAll('.auth-toggle button');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  btns[mode === 'login' ? 0 : 1].classList.add('active');
+  document.getElementById('authBtn').textContent = mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản';
+  var title = document.getElementById('authFormTitle');
+  var copy = document.getElementById('authFormCopy');
+  if (title) title.textContent = mode === 'login' ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản của bạn';
+  if (copy) copy.textContent = mode === 'login'
+    ? 'Truy cập triển khai, máy ảo và thông tin kết nối.'
+    : 'Thiết lập phiên TrueTeam được bảo vệ chỉ trong vài giây.';
+}
+
+async function handleAuth() {
+  var email = document.getElementById('emailInput').value.trim();
+  var password = document.getElementById('passwordInput').value;
+  if (!email || !password) { toast('Vui lòng điền đầy đủ thông tin', 'error'); return; }
+  setLoading('authBtn', true);
+  try {
+    var data = await api(state.authMode === 'login' ? 'login' : 'register', { email: email, password: password });
+    state.email = email;
+    state.sessionToken = data.sessionToken;
+    state.machines = data.machines || [];
+    localStorage.setItem('sessionToken', data.sessionToken);
+    syncAccountChrome(data.profile || data);
+
+    setStepDone(1);
+    document.getElementById('authSuccess').classList.remove('hidden');
+    typewrite(document.getElementById('authSuccessText'), 'Đã đăng nhập: ' + email);
+    document.getElementById('authBtn').classList.add('hidden');
+
+    if (data.githubToken) {
+      state.token = data.githubToken;
+      document.getElementById('tokenInput').value = '••••••••••••••••';
+      setStepDone(2);
+      show('tokenCard');
+      show('deployCard');
+      setStepActive(3);
+      if (data.owner) {
+        state.owner = data.owner;
+      }
+      show('rdpCard');
+      setStepActive(5);
+    } else {
+      show('tokenCard');
+      setStepActive(2);
+    }
+
+    renderMachines();
+    startTimers();
+    if (state.machines && state.machines.length > 0) switchToSplit();
+    toast('Thành công!');
+    addNotif(getMention() + ' Chào mừng trở lại! Bạn đã đăng nhập.', '&#128075;');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setLoading('authBtn', false);
+}
+
+async function saveToken() {
+  var token = document.getElementById('tokenInput').value.trim();
+  if (!token) { toast('Vui lòng nhập token', 'error'); return; }
+  state.token = token;
+
+  if (state.sessionToken) {
+    try {
+      await api('save-token', { sessionToken: state.sessionToken, githubToken: token });
+    } catch (e) { /* silent */ }
+  }
+
+  setStepDone(2);
+  show('deployCard');
+  setStepActive(3);
+  toast('Đã lưu token');
+}
+
+async function handleDeploy() {
+  setLoading('deployBtn', true);
+  show('deployProgress');
+
+  document.getElementById('ds-fork-badge').className = 'badge badge-yellow';
+  document.getElementById('ds-fork-badge').textContent = 'ĐANG CHẠY';
+
+  try {
+    var fork = await api('fork', { token: state.token, sessionToken: state.sessionToken, mode: state.mode });
+    state.owner = fork.owner;
+    if (fork.name) state.repo = fork.name;
+    document.getElementById('ds-fork-badge').className = 'badge badge-green';
+    document.getElementById('ds-fork-badge').textContent = 'XONG';
+  } catch (e) {
+    if (e.message.includes('already exists')) {
+      var userRes = await fetch('https://api.github.com/user', {
+        headers: { Authorization: 'Bearer ' + state.token }
+      });
+      var userData = await userRes.json();
+      state.owner = userData.login;
+      state.repo = (state.mode === 'bore') ? 'vps-bore' : (state.mode === 'ngrok' || state.mode === 'ngrok_fast') ? 'vps-ngrok' : 'vps-novnc';
+      document.getElementById('ds-fork-badge').className = 'badge badge-green';
+      document.getElementById('ds-fork-badge').textContent = 'XONG';
+    } else {
+      document.getElementById('ds-fork-badge').className = 'badge badge-red';
+      document.getElementById('ds-fork-badge').textContent = 'LỖI';
+      toast(e.message, 'error');
+      setLoading('deployBtn', false);
+      return;
+    }
+  }
+
+  await new Promise(function(r) { setTimeout(r, 3000); });
+
+  document.getElementById('ds-workflow-badge').className = 'badge badge-yellow';
+  document.getElementById('ds-workflow-badge').textContent = 'ĐANG CHẠY';
+
+  try {
+    await api('run-workflow', { token: state.token, owner: state.owner, repo: state.repo, sessionToken: state.sessionToken, mode: state.mode });
+    document.getElementById('ds-workflow-badge').className = 'badge badge-green';
+    document.getElementById('ds-workflow-badge').textContent = 'XONG';
+    toast('Đã khởi chạy workflow!');
+  } catch (e) {
+    document.getElementById('ds-workflow-badge').className = 'badge badge-red';
+    document.getElementById('ds-workflow-badge').textContent = 'LỖI';
+    toast(e.message, 'error');
+    setLoading('deployBtn', false);
+    return;
+  }
+
+  setLoading('deployBtn', false);
+  setStepDone(3);
+  show('rdpCard');
+  setStepActive(5);
+
+  var connKindStart = (state.mode === 'bore') ? 'thông tin RDP' : 'liên kết noVNC';
+  toast('Đã bắt đầu triển khai! Đang tự động lấy ' + connKindStart + '...');
+  addNotif(getMention() + ' Đã bắt đầu triển khai! Đang chờ ' + connKindStart + '...', '&#128640;');
+  document.getElementById('rdpStatusText').textContent = 'Đang chờ workflow...';
+
+  retryCount = 0;
+  fetchStartTime = Date.now();
+  startEtaTicker();
+  setTimeout(function() { fetchRdpInfoWithRetry(); }, 30000);
+}
+
+var fetchStartTime = 0;
+var etaInterval = null;
+
+function fmtMMSS(s) {
+  if (s < 0) s = 0;
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+
+function getStageHint(elapsedSec, mode) {
+  if (mode === 'bore') {
+    if (elapsedSec < 30)  return '🚀 Workflow đang khởi động...';
+    if (elapsedSec < 60)  return '⬇️ Đang tải bore.exe + tạo tài khoản RDP...';
+    if (elapsedSec < 150) return '🔌 Đang đợi bore.pub cấp port...';
+    return '⏳ Bore hơi lâu, đang đợi...';
+  } else if (mode === 'ngrok' || mode === 'ngrok_fast') {
+    if (elapsedSec < 30)  return '🚀 Workflow đang khởi động...';
+    if (elapsedSec < 60)  return '⬇️ Đang tải ngrok + tạo tài khoản RDP...';
+    if (elapsedSec < 150) return '🔌 Đang đợi ngrok cấp tunnel...';
+    return '⏳ Ngrok hơi lâu, đang đợi...';
+  } else {
+    if (elapsedSec < 30)  return '🚀 Workflow đang khởi động...';
+    if (elapsedSec < 90)  return '⬇️ Đang cài TightVNC + Python websockify...';
+    if (elapsedSec < 180) return '🌐 Đang tải Cloudflared + bật tunnel...';
+    if (elapsedSec < 360) return '🔌 Đang đợi Cloudflared cấp subdomain...';
+    return '⏳ Cloudflared hơi lâu, đang đợi...';
+  }
+}
+
+function startEtaTicker() {
+  if (etaInterval) clearInterval(etaInterval);
+  etaInterval = setInterval(updateEtaDisplay, 1000);
+  updateEtaDisplay();
+}
+
+function stopEtaTicker() {
+  if (etaInterval) { clearInterval(etaInterval); etaInterval = null; }
+}
+
+function updateEtaDisplay() {
+  if (!fetchStartTime) return;
+  var el = document.getElementById('retryInfo');
+  if (!el) return;
+  var elapsed = Math.floor((Date.now() - fetchStartTime) / 1000);
+  var mode = state.mode;
+  var etaTotal = mode === 'bore' ? 180 : (mode === 'ngrok' || mode === 'ngrok_fast') ? 210 : 420;
+  var remaining = Math.max(0, etaTotal - elapsed);
+  var stage = getStageHint(elapsed, mode);
+  el.innerHTML = '<div style="display:flex;justify-content:space-between;gap:8px;font-size:0.72rem;">'
+    + '<span>⏱ Đã chờ ' + fmtMMSS(elapsed) + '</span>'
+    + '<span style="color:var(--text2);">Còn khoảng ~' + fmtMMSS(remaining) + '</span>'
+    + '</div>'
+    + '<div style="margin-top:4px;font-size:0.72rem;color:var(--text2);">' + stage + '</div>';
+}
+
+async function fetchRdpInfo() {
+  if (!fetchStartTime) { fetchStartTime = Date.now(); startEtaTicker(); }
+  return fetchRdpInfoWithRetry();
+}
+
+async function fetchRdpInfoWithRetry() {
+  if (retryTimer) clearTimeout(retryTimer);
+
+  var mode = state.mode;
+  var isBore = (mode === 'bore');
+  var isNgrok = (mode === 'ngrok' || mode === 'ngrok_fast');
+  var connKind = isBore ? 'thông tin RDP' : (isNgrok ? 'thông tin Ngrok' : 'liên kết noVNC');
+
+  setLoading('fetchRdpBtn', true);
+  document.getElementById('rdpStatus').className = 'info-status scanning';
+  document.getElementById('rdpStatusText').textContent = 'Đang lấy ' + connKind + '... (' + (retryCount + 1) + '/' + maxRetries + ')';
+  updateEtaDisplay();
+
+  try {
+    var data = await api('rdp-info', { token: state.token, owner: state.owner, repo: state.repo, sessionToken: state.sessionToken, mode: mode });
+    var info = data.info;
+
+    if (info.ngrok_url) {
+      stopEtaTicker();
+      var totalElapsed = fetchStartTime ? Math.floor((Date.now() - fetchStartTime) / 1000) : 0;
+      fetchStartTime = 0;
+      document.getElementById('rdpStatus').className = 'info-status ready';
+      var label = isBore ? ('Bore RDP: ' + info.ngrok_url)
+        : isNgrok ? ('Ngrok RDP: ' + info.ngrok_url)
+        : ('Liên kết noVNC: ' + info.ngrok_url);
+      typewrite(document.getElementById('rdpStatusText'), label);
+      var hintHtml;
+      if (isBore) {
+        hintHtml = 'Tài khoản: <strong style="color:var(--accent3)">' + escHtml(info.username || 'admin') + '</strong> · Mật khẩu: <strong style="color:var(--accent3)">' + escHtml(info.password || 'WindowsRDP2026@') + '</strong> · <code style="color:var(--text2)">mstsc /v:' + escHtml(info.ngrok_url) + '</code>';
+      } else if (isNgrok) {
+        hintHtml = 'Tài khoản: <strong style="color:var(--accent3)">' + escHtml(info.username || 'DucthengTechDz') + '</strong> · Mật khẩu: <strong style="color:var(--accent3)">' + escHtml(info.password || 'W1nd0ws-P4ssw0rd-2025!') + '</strong> · <code style="color:var(--text2)">mstsc /v:' + escHtml(info.ngrok_url) + '</code>';
+      } else {
+        hintHtml = 'Mật khẩu: <strong style="color:var(--accent3)">' + escHtml(info.password || 'hieudz') + '</strong>';
+      }
+      hintHtml += ' · <span style="color:var(--text3)">⏱ ' + fmtMMSS(totalElapsed) + '</span>';
+      document.getElementById('retryInfo').innerHTML = hintHtml;
+      setStepDone(5);
+      setLoading('fetchRdpBtn', false);
+      toast('Đã tìm thấy ' + connKind + '!');
+      var notifHtml;
+      if (isBore) {
+        notifHtml = ' VPS của bạn đã <b>sẵn sàng</b>! Bore RDP: <code>mstsc /v:' + escHtml(info.ngrok_url) + '</code> · ' + escHtml(info.username || 'admin') + ' / ' + escHtml(info.password || 'WindowsRDP2026@');
+      } else if (isNgrok) {
+        notifHtml = ' VPS của bạn đã <b>sẵn sàng</b>! Ngrok RDP: <code>mstsc /v:' + escHtml(info.ngrok_url) + '</code> · ' + escHtml(info.username || 'DucthengTechDz') + ' / ' + escHtml(info.password || 'W1nd0ws-P4ssw0rd-2025!');
+      } else {
+        notifHtml = ' VPS của bạn đã <b>sẵn sàng</b>! Liên kết noVNC: <a href="' + escHtml(info.ngrok_url) + '" target="_blank">Mở</a> (mật khẩu: ' + escHtml(info.password || 'hieudz') + ')';
+      }
+      addNotif(getMention() + notifHtml, '&#9989;');
+
+      // Refresh machines từ server
+      try {
+        var session = await api('session', { sessionToken: state.sessionToken });
+        state.machines = session.machines || [];
+      } catch (e) {
+        // Thêm local nếu ko refresh được
+        var exists = state.machines.some(function(mm) { return mm.ngrok_url === info.ngrok_url; });
+        if (!exists) {
+          state.machines.push({ id: Date.now().toString(36), username: info.username, password: info.password, ngrok_url: info.ngrok_url, createdAt: Date.now() });
+        }
+      }
+      renderMachines();
+      startTimers();
+      switchToSplit();
+      return;
+    }
+
+    if (retryCount < maxRetries) {
+      retryCount++;
+      retryTimer = setTimeout(function() { fetchRdpInfoWithRetry(); }, 10000);
+      setLoading('fetchRdpBtn', false);
+      document.getElementById('fetchRdpBtn').disabled = false;
+      document.getElementById('fetchRdpBtn').innerHTML = '🔄 Đang tự thử lại...';
+    } else {
+      stopEtaTicker();
+      fetchStartTime = 0;
+      document.getElementById('rdpStatus').className = 'info-status error';
+      document.getElementById('rdpStatusText').textContent = '❌ Hết thời gian chờ';
+      document.getElementById('retryInfo').textContent = 'Quá 15 phút chưa có thông tin — workflow có thể lỗi. Kiểm tra tab GitHub Actions.';
+      setLoading('fetchRdpBtn', false);
+    }
+
+  } catch (e) {
+    if (retryCount < maxRetries) {
+      retryCount++;
+      retryTimer = setTimeout(function() { fetchRdpInfoWithRetry(); }, 10000);
+      setLoading('fetchRdpBtn', false);
+      document.getElementById('fetchRdpBtn').disabled = false;
+      document.getElementById('fetchRdpBtn').innerHTML = '🔄 Đang thử lại...';
+      document.getElementById('rdpStatusText').textContent = e.message + ' (Đang thử lại...)';
+    } else {
+      stopEtaTicker();
+      fetchStartTime = 0;
+      document.getElementById('rdpStatus').className = 'info-status error';
+      document.getElementById('rdpStatusText').textContent = '❌ ' + e.message;
+      setLoading('fetchRdpBtn', false);
+    }
+  }
+}
+
+function copyText(text, btn) {
+  if (!btn) { btn = document.activeElement; }
+  function onSuccess() {
+    if (btn && btn.classList) {
+      btn.classList.add('copied');
+      btn.textContent = '✔ Đã chép!';
+      setTimeout(function(){ btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }
+    toast('Đã sao chép!');
+  }
+  function fallbackCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      onSuccess();
+    } catch (e) {
+      toast('Sao chép thất bại', 'error');
+    }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+}

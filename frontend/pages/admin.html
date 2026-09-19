@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quản trị - TrueTeam Cloud</title>
+<meta name="theme-color" content="#0e0c12"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+	<style>
+	*{margin:0;padding:0;box-sizing:border-box}
+	:root{
+	  color-scheme:dark;
+	  --bg:#0e0c12;--bg2:#131117;--surface:#19171f;--surface2:#211e29;--surface3:#2a2634;
+	  --border:#302c3a;--border2:#443d50;--border3:#5b526a;
+	  --text:#f5f2fa;--text2:#b6afc2;--text3:#7f778d;
+	  --accent:#b895ff;--accent2:#9f7aef;--accent3:#dccfff;
+	  --accent-glow:rgba(184,149,255,0.17);
+	  --red:#ef4444;--yellow:#eab308;--green:#22c55e;
+	  --radius:6px;--radius-lg:8px;
+	  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+	  --font-mono:'JetBrains Mono',Consolas,monospace;
+	}
+	body{
+	  font-family:var(--font-sans);
+	  background:var(--bg);color:var(--text);min-height:100vh;padding:16px;
+	  -webkit-font-smoothing:antialiased;
+	  background-attachment:fixed;
+	  letter-spacing:0;
+	}
+@media(min-width:640px){body{padding:24px;}}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.container{max-width:960px;margin:0 auto;}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* Header */
+.admin-header{text-align:center;margin-bottom:24px;animation:slideUp 0.4s ease both;}
+.admin-header h1{font-size:1.4rem;font-weight:600;color:#fff;letter-spacing:0;font-family:var(--font-sans);display:flex;align-items:center;justify-content:center;gap:10px;}
+	.admin-header h1 span{
+	  color:var(--accent);
+	}
+.admin-header p{color:var(--text3);font-size:0.78rem;margin-top:4px;}
+/* Cards */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px;margin-bottom:12px;transition:border-color 0.15s ease;
+}
+@media(min-width:640px){.card{padding:24px;margin-bottom:16px;}}
+.card:hover{border-color:var(--border2);}
+.card h2{font-size:0.82rem;font-weight:600;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.02em;}
+/* Inputs */
+input,select{
+  width:100%;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);
+  font-family:var(--font-sans);font-size:16px;
+  margin-bottom:12px;outline:none;transition:all 0.2s;
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface2);}
+input::placeholder{color:var(--text3);}
+/* Buttons */
+.btn{
+  padding:9px 18px;border:1px solid transparent;border-radius:var(--radius);cursor:pointer;
+  font-weight:500;font-size:0.82rem;margin-right:6px;margin-bottom:6px;
+	  font-family:var(--font-sans);letter-spacing:0;
+  transition:all 0.12s ease;touch-action:manipulation;
+}
+.btn:active{transform:scale(0.98);}
+	.btn-accent{background:var(--accent);color:#1d122c;border-color:var(--accent);font-weight:600;}
+	.btn-accent:hover{background:var(--accent2);border-color:var(--accent2);box-shadow:0 2px 12px var(--accent-glow);}
+	.btn-red{background:transparent;color:var(--red);border-color:var(--border2);}
+	.btn-red:hover{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.06);}
+	.btn-green{background:transparent;color:var(--accent);border-color:var(--border2);}
+	.btn-green:hover{border-color:var(--accent);background:rgba(184,149,255,0.08);}
+	.btn-sm{padding:6px 14px;font-size:0.72rem;border-radius:var(--radius);}
+/* Table - desktop only */
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);}
+th{color:var(--text3);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+td{font-family:'JetBrains Mono',monospace;font-size:0.78rem;word-break:break-all;color:var(--text2);}
+tr{transition:background 0.1s;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+/* Mobile card items - replaces tables on small screens */
+.m-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px;margin-bottom:10px;
+}
+.m-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+.m-item-email{font-size:0.82rem;font-weight:600;color:var(--text);word-break:break-all;min-width:0;flex:1;}
+.m-item-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--border);}
+.m-item-label{font-size:0.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;}
+.m-item-value{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text2);text-align:right;word-break:break-all;max-width:60%;}
+.m-item-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.m-item-actions .btn-sm{flex:1;text-align:center;min-width:0;}
+/* Badges */
+.badge{padding:3px 10px;border-radius:9999px;font-size:0.64rem;font-weight:600;white-space:nowrap;font-family:var(--font-mono);letter-spacing:0.03em;border:1px solid transparent;}
+.badge-green{background:rgba(184,149,255,0.10);color:var(--accent3);border-color:rgba(184,149,255,0.22);}
+.badge-admin{background:rgba(184,149,255,0.18);color:var(--accent3);border-color:rgba(184,149,255,0.42);}
+.badge-yellow{background:rgba(234,179,8,0.10);color:var(--yellow);border-color:rgba(234,179,8,0.22);}
+.badge-red{background:rgba(239,68,68,0.10);color:var(--red);border-color:rgba(239,68,68,0.20);}
+.badge-gray{background:var(--surface2);color:var(--text3);border-color:var(--border2);}
+.role-stack{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:108px;}
+.role-select{width:108px;height:30px;padding:4px 26px 4px 8px;margin:0;border-radius:5px;background:var(--surface2);font:500 0.7rem var(--font-sans);cursor:pointer;}
+.role-select:disabled{cursor:wait;opacity:0.6;}
+.m-item-actions .role-select{flex:1 1 132px;width:auto;min-width:132px;}
+.hidden{display:none!important}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}}
+.stat{
+  background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 10px;text-align:center;transition:border-color 0.15s;
+}
+@media(min-width:640px){.stat{padding:20px;}}
+.stat:hover{border-color:var(--border2);}
+.stat-num{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:0;font-family:var(--font-mono);}
+@media(min-width:640px){.stat-num{font-size:2rem;}}
+.stat-label{font-size:0.64rem;color:var(--text3);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+@media(min-width:640px){.stat-label{font-size:0.7rem;margin-top:4px;}}
+/* Tabs */
+.tabs{display:flex;gap:3px;margin-bottom:16px;background:var(--bg);padding:3px;border-radius:var(--radius);border:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tabs button{
+  flex:1 0 96px;padding:10px 8px;border:1px solid transparent;border-radius:4px;
+  background:transparent;color:var(--text3);cursor:pointer;
+  font-weight:500;font-size:0.78rem;transition:all 0.12s;
+  font-family:var(--font-sans);
+}
+@media(min-width:640px){.tabs button{font-size:0.82rem;padding:10px;}}
+.tabs button.active{background:var(--surface2);color:var(--text);border-color:var(--border2);box-shadow:none;}
+.tabs button:hover:not(.active){color:var(--text2);}
+/* Toast */
+.toast-container{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;width:90%;max-width:360px;}
+@media(min-width:640px){.toast-container{left:auto;right:20px;top:20px;transform:none;}}
+.toast{
+  padding:10px 16px;border-radius:var(--radius);margin-bottom:6px;font-size:0.8rem;font-weight:500;
+  animation:slideIn 0.3s ease;border:1px solid var(--border);text-align:center;
+}
+@media(min-width:640px){.toast{text-align:left;}}
+.toast-success{background:var(--surface);color:var(--accent);}
+.toast-error{background:var(--surface);color:var(--red);border-color:rgba(239,68,68,0.2);}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  display:flex;align-items:flex-end;justify-content:center;z-index:100;
+  animation:fadeIn 0.15s;padding:0;
+}
+@media(min-width:640px){.modal-overlay{align-items:center;padding:20px;}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:24px;width:100%;max-width:400px;
+  box-shadow:0 -8px 32px rgba(0,0,0,0.5);animation:modalSlideUp 0.25s ease;
+}
+@media(min-width:640px){
+  .modal{border-radius:var(--radius-lg);animation:modalIn 0.2s ease;}
+}
+@keyframes modalSlideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+.modal h3{margin-bottom:16px;color:var(--text);font-weight:600;font-size:1rem;}
+.actions-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.spinner{width:16px;height:16px;border:2px solid rgba(29,18,44,0.25);border-top-color:#1d122c;border-radius:50%;animation:spin .65s linear infinite;margin:auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint-box{padding:10px 12px;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font-size:0.76rem;line-height:1.5;}
+.machines-empty{padding:24px;text-align:center;color:var(--text3);font-size:0.78rem;}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.admin-identity{display:flex;align-items:center;gap:9px;min-width:150px;}
+.admin-avatar{position:relative;width:30px;height:30px;border-radius:6px;object-fit:cover;background:#2b2140;color:var(--accent3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font:700 .62rem var(--font-sans);overflow:hidden;}
+.admin-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+.admin-identity-copy{min-width:0;}
+.admin-identity-copy strong{display:block;color:var(--text);font:600 .75rem var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;}
+.admin-identity-copy span{display:block;margin-top:2px;color:var(--text3);font:500 .63rem var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;}
+/* Console layout */
+body{padding:0;background:var(--bg);overflow-x:hidden;}
+.admin-app{min-height:100vh;}
+.admin-shell{min-height:100vh;display:grid;grid-template-columns:232px minmax(0,1fr);}
+.console-sidebar{position:sticky;top:0;height:100vh;padding:18px 14px;border-right:1px solid var(--border);background:#100e14;display:flex;flex-direction:column;gap:22px;z-index:20;}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 7px;color:var(--text);text-decoration:none;}
+.brand-mark{width:34px;height:34px;padding:7px;border:1px solid rgba(184,149,255,.35);border-radius:7px;background:rgba(184,149,255,.1);display:grid;grid-template-columns:repeat(2,1fr);gap:3px;flex:0 0 auto;}
+.brand-mark span{border-radius:1px;background:var(--accent);}
+.brand-copy{min-width:0;}
+.brand-copy strong,.brand-copy small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-copy strong{font-size:.82rem;}
+.brand-copy small{margin-top:2px;color:var(--text3);font:500 .55rem var(--font-mono);text-transform:uppercase;}
+.sidebar-label{padding:0 8px;color:var(--text3);font:600 .56rem var(--font-mono);text-transform:uppercase;}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;}
+.nav-item{width:100%;min-height:40px;padding:0 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text3);display:flex;align-items:center;gap:10px;font:500 .74rem var(--font-sans);cursor:pointer;text-align:left;}
+.nav-item:hover{color:var(--text2);background:rgba(255,255,255,.025);}
+.nav-item.active{color:var(--text);border-color:rgba(184,149,255,.28);background:rgba(184,149,255,.11);}
+.nav-item .nav-count{margin-left:auto;color:var(--text3);font:500 .56rem var(--font-mono);}
+.sidebar-spacer{flex:1;}
+.sidebar-note{padding:12px;border:1px solid var(--border);border-radius:7px;background:var(--surface);}
+.sidebar-note strong{display:block;font-size:.7rem;}
+.sidebar-note span{display:block;margin-top:5px;color:var(--text3);font-size:.62rem;line-height:1.45;}
+.service-state{margin-top:12px;padding-left:13px;position:relative;color:var(--text3);font:500 .58rem var(--font-mono);}
+.service-state::before{content:'';position:absolute;left:0;top:4px;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(184,149,255,.12);}
+.admin-workspace{min-width:0;}
+.admin-topbar{min-height:64px;padding:12px 24px;border-bottom:1px solid var(--border);background:rgba(14,12,18,.92);display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:15;backdrop-filter:blur(12px);}
+.breadcrumbs{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.68rem;white-space:nowrap;}
+.breadcrumbs strong{color:var(--text2);font-weight:600;}.breadcrumbs .slash{color:var(--border3);}
+.topbar-controls{min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.global-search{width:min(390px,36vw);height:38px;padding:0 8px 0 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);display:flex;align-items:center;gap:8px;transition:border-color .14s,box-shadow .14s;}
+.global-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.global-search input{min-width:0;height:36px;padding:0;margin:0;border:0;background:transparent;box-shadow:none;font-size:.75rem;}
+.global-search input:focus{border:0;background:transparent;box-shadow:none;}
+.search-clear{width:26px;height:26px;border:0;border-radius:4px;background:transparent;color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.search-clear:hover{color:var(--text);background:var(--surface2);}
+.session-pill{height:38px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);display:flex;align-items:center;gap:8px;font-size:.68rem;white-space:nowrap;}
+.session-pill strong{color:var(--accent3);font-size:.64rem;text-transform:uppercase;}
+.workspace-content{width:min(100%,1480px);margin:0 auto;padding:28px 30px 42px;}
+.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:20px;}
+.eyebrow{margin-bottom:6px;color:var(--accent);font:600 .58rem var(--font-mono);text-transform:uppercase;}
+.page-heading h1{font-size:1.35rem;line-height:1.2;}.page-heading p{max-width:620px;margin-top:7px;color:var(--text3);font-size:.72rem;line-height:1.55;}
+.result-count{color:var(--text3);font:500 .65rem var(--font-mono);white-space:nowrap;}
+.content-panel{border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden;}
+.panel-header{min-height:64px;padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.panel-title{min-width:0;}.panel-title h2{margin:0;font-size:.82rem;text-transform:none;letter-spacing:0;}.panel-title p{margin-top:4px;color:var(--text3);font-size:.64rem;}
+.panel-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;}
+.panel-actions .btn{margin:0;}
+.panel-actions .btn,.form-row .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.data-list{min-width:0;}
+.data-head,.data-row{display:grid;align-items:center;gap:12px;padding:0 16px;}
+.data-head{min-height:38px;background:var(--bg2);color:var(--text3);font:600 .57rem var(--font-mono);text-transform:uppercase;}
+.data-row{min-height:58px;border-top:1px solid var(--border);transition:background .12s;}
+.data-row:hover{background:rgba(255,255,255,.018);}
+.data-row.is-muted{opacity:.52;}
+.user-grid{grid-template-columns:minmax(210px,1.65fr) 142px 92px minmax(120px,1fr) 62px 124px;}
+.token-grid{grid-template-columns:minmax(180px,1.3fr) minmax(135px,1fr) minmax(135px,1fr) minmax(120px,.9fr) 88px 42px;}
+.machine-grid{grid-template-columns:minmax(180px,1.15fr) minmax(230px,1.8fr) 125px 96px 148px;}
+.data-cell{min-width:0;color:var(--text2);font-size:.7rem;overflow-wrap:anywhere;}
+.data-cell.mono{font-family:var(--font-mono);font-size:.64rem;}
+.data-cell a{color:var(--accent3);text-decoration:none;}.data-cell a:hover{text-decoration:underline;}
+.data-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;}
+.icon-btn{width:32px;height:32px;padding:0;margin:0;border:1px solid var(--border2);border-radius:5px;background:transparent;color:var(--text3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;}
+.icon-btn:hover{color:var(--text);border-color:var(--accent);background:rgba(184,149,255,.08);}.icon-btn.danger:hover{color:var(--red);border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.07);}
+.icon{width:16px;height:16px;stroke-width:1.8;}.icon-sm{width:14px;height:14px;}
+.role-stack{min-width:0;}.role-control{height:32px;padding:0 6px 0 9px;border:1px solid var(--border2);border-radius:5px;background:var(--surface2);display:flex;align-items:center;gap:7px;}
+.role-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex:0 0 auto;}.role-control[data-role='seller'] .role-dot{background:#75d5ff}.role-control[data-role='admin'] .role-dot{background:var(--accent)}.role-control[data-role='owner'] .role-dot{background:var(--yellow)}
+.role-select{width:100%;height:30px;padding:0 20px 0 0;margin:0;border:0;background:transparent;color:var(--text);color-scheme:dark;box-shadow:none;font:600 .66rem var(--font-sans);cursor:pointer;}.role-select option{background:#211e29;color:#f5f2fa;}.role-select option:disabled{color:#7f778d;}.role-select:focus{border:0;background:transparent;box-shadow:none;}
+.secret-preview{font:500 .63rem var(--font-mono);color:var(--text3);white-space:nowrap;}
+.secret-toggle{max-width:100%;padding:4px 7px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text3);display:inline-flex;align-items:center;gap:6px;font:500 .61rem var(--font-mono);cursor:pointer;}.secret-toggle:hover{color:var(--text2);border-color:var(--border2);}.secret-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.record-title{display:block;color:var(--text);font:600 .7rem var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.record-sub{display:block;margin-top:3px;color:var(--text3);font-size:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.empty-panel{padding:50px 20px;text-align:center;color:var(--text3);}.empty-panel strong{display:block;margin-top:10px;color:var(--text2);font-size:.76rem;}.empty-panel span{display:block;margin-top:4px;font-size:.64rem;}
+.login-view{min-height:calc(100vh - 64px);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.75fr);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);}
+.login-visual{min-height:520px;padding:32px;position:relative;background:linear-gradient(90deg,rgba(14,12,18,.05),rgba(14,12,18,.78)),url('/assets/community-art.webp') center/cover;display:flex;align-items:flex-end;}
+.login-visual-copy{max-width:520px;}.login-visual-copy h1{font-size:1.55rem;}.login-visual-copy p{margin-top:8px;color:var(--text2);font-size:.76rem;line-height:1.6;}
+.login-form-shell{padding:34px;display:flex;flex-direction:column;justify-content:center;background:var(--bg2);}.login-form-shell h2{margin:0;font-size:1rem;text-transform:none;letter-spacing:0;}.login-form-shell>p{margin:7px 0 22px;color:var(--text3);font-size:.7rem;line-height:1.55;}
+.login-form-shell label{display:block;margin-bottom:6px;color:var(--text2);font-size:.68rem;}.login-form-shell input{background:var(--surface);}
+.settings-form{padding:18px;}.form-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,.7fr) auto;gap:8px;align-items:start;}.form-row input{margin:0;}
+.settings-card{max-width:780px;padding:18px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);}.settings-card h3{font-size:.78rem;}.settings-card p{margin:7px 0 14px;color:var(--text3);font-size:.68rem;line-height:1.55;}
+@media(max-width:900px){
+	  .admin-shell{grid-template-columns:minmax(0,1fr);}.console-sidebar{position:relative;width:100%;min-width:0;max-width:100vw;height:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--border);gap:10px;overflow:hidden;}.console-sidebar .sidebar-label,.sidebar-note,.service-state{display:none;}#adminNav,.brand,.sidebar-nav{width:100%;min-width:0;max-width:100%;}.sidebar-nav{flex-direction:row;overflow-x:auto;scrollbar-width:none;}.sidebar-nav::-webkit-scrollbar{display:none}.nav-item{width:auto;min-width:108px;flex:0 0 auto;}.sidebar-spacer{display:none}.admin-workspace{width:100%;max-width:100vw;overflow-x:hidden;}.admin-topbar{top:0;}.login-view{grid-template-columns:1fr;}.login-visual{min-height:260px;}.login-form-shell{padding:26px;}
+}
+@media(max-width:720px){
+	  .admin-topbar{top:0;padding:10px 14px;flex-wrap:wrap;}.breadcrumbs{display:none}.topbar-controls{width:100%;min-width:0;}.global-search{width:0;min-width:0;flex:1 1 auto;}.global-search input{width:0;min-width:0;flex:1 1 0;}.session-pill{flex:0 0 auto;}.session-pill span{display:none}.workspace-content{width:100%;max-width:100%;padding:20px 14px 34px;}.page-heading{align-items:flex-start;flex-direction:column;}.stats{min-width:0;grid-template-columns:repeat(2,minmax(0,1fr));}.content-panel{min-width:0;}.panel-header{align-items:flex-start;flex-direction:column;}.panel-actions{justify-content:flex-start;}.data-head{display:none}.data-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:13px 14px;}.data-cell{grid-column:1/-1;display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;align-items:start;}.data-cell::before{content:attr(data-label);color:var(--text3);font:600 .56rem var(--font-mono);text-transform:uppercase;}.data-cell.identity{display:block}.data-cell.identity::before{display:none}.data-cell>.badge{width:max-content;max-width:100%;justify-self:start;}.data-actions{grid-column:1/-1;justify-content:flex-start;padding-top:8px;border-top:1px solid var(--border);}.role-control{width:150px;max-width:100%;}.form-row{grid-template-columns:1fr;}.login-visual{min-height:220px;padding:22px}.login-form-shell{padding:22px}.admin-identity-copy strong,.admin-identity-copy span{max-width:220px;}
+}
+@media(max-width:420px){.brand-copy small{display:none}.nav-item{min-width:96px}.session-pill{padding:0 8px}.login-visual-copy h1{font-size:1.2rem}.stats{gap:8px}.stat{padding:12px 8px}.stat-num{font-size:1.25rem}.admin-identity-copy strong,.admin-identity-copy span{max-width:190px;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+<div id="modalContainer"></div>
+
+<div class="admin-app">
+  <div class="admin-shell">
+    <aside class="console-sidebar" aria-label="Điều hướng quản trị">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-copy"><strong>TrueTeam Admin</strong><small>Control workspace</small></span>
+      </div>
+
+      <div id="adminNav" class="hidden">
+        <div class="sidebar-label">Quản lý</div>
+        <nav class="sidebar-nav" style="margin-top:8px;">
+          <button class="nav-item active" data-admin-tab="users" onclick="switchTab('users',this)"><i data-lucide="users" class="icon" aria-hidden="true">U</i><span>Người dùng</span><span class="nav-count" id="navUsersCount">0</span></button>
+          <button class="nav-item" data-admin-tab="tokens" onclick="switchTab('tokens',this)"><i data-lucide="key-round" class="icon" aria-hidden="true">K</i><span>Token</span><span class="nav-count" id="navTokensCount">0</span></button>
+          <button class="nav-item" data-admin-tab="machines" onclick="switchTab('machines',this)"><i data-lucide="server" class="icon" aria-hidden="true">M</i><span>Máy ảo</span><span class="nav-count" id="navMachinesCount">0</span></button>
+          <button class="nav-item" data-admin-tab="settings" onclick="switchTab('settings',this)"><i data-lucide="settings-2" class="icon" aria-hidden="true">S</i><span>Cài đặt</span></button>
+        </nav>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-note"><strong>TrueTeam Community</strong><span>Vận hành, kiểm soát truy cập và tình trạng dịch vụ trong một không gian làm việc.</span></div>
+      <div class="service-state">Dịch vụ đang hoạt động</div>
+    </aside>
+
+    <main class="admin-workspace">
+      <header class="admin-topbar">
+        <div class="breadcrumbs"><span>TrueTeam</span><span class="slash">/</span><strong>Bảng điều khiển quản trị</strong></div>
+        <div class="topbar-controls">
+          <div class="global-search hidden" id="adminSearchShell">
+            <i data-lucide="search" class="icon icon-sm" aria-hidden="true">?</i>
+            <input type="search" id="adminSearchInput" placeholder="Tìm người dùng" autocomplete="off" oninput="handleAdminSearch(this.value)" onkeydown="if(event.key==='Escape')clearAdminSearch()" />
+            <button type="button" class="search-clear hidden" id="adminSearchClear" onclick="clearAdminSearch()" aria-label="Xóa tìm kiếm"><i data-lucide="x" class="icon icon-sm" aria-hidden="true">x</i></button>
+          </div>
+          <div class="session-pill hidden" id="adminSessionControls"><span>Đã đăng nhập:</span><strong>Quản trị</strong><button type="button" class="search-clear" onclick="logoutAdmin()" aria-label="Đăng xuất"><i data-lucide="log-out" class="icon icon-sm" aria-hidden="true">x</i></button></div>
+        </div>
+      </header>
+
+      <div class="workspace-content">
+        <section class="login-view" id="loginCard">
+          <div class="login-visual">
+            <div class="login-visual-copy"><div class="eyebrow">Vận hành an toàn</div><h1>Điều hành cloud cộng đồng trong một không gian làm việc gọn gàng.</h1><p>Theo dõi tài khoản, token truy cập, máy ảo và cài đặt dịch vụ dùng chung.</p></div>
+          </div>
+          <form class="login-form-shell" onsubmit="event.preventDefault();adminLogin();">
+            <div class="eyebrow">Quyền truy cập quản trị viên</div>
+            <h2>Đăng nhập để tiếp tục</h2>
+            <p>Dùng tài khoản Admin hoặc Owner. Bỏ trống email để dùng mật khẩu tổng.</p>
+            <label for="adminEmailInput">Địa chỉ email</label>
+            <input type="email" id="adminEmailInput" placeholder="Email (tài khoản admin hoặc owner)" autocomplete="email" />
+            <label for="adminPassInput">Mật khẩu</label>
+            <input type="password" id="adminPassInput" placeholder="Mật khẩu" autocomplete="current-password" required />
+            <button type="submit" class="btn btn-accent" id="adminLoginButton" style="width:100%;margin:4px 0 0;">Đăng nhập</button>
+          </form>
+        </section>
+
+        <div id="dashboard" class="hidden">
+          <header class="page-heading">
+            <div><div class="eyebrow">Không gian vận hành</div><h1 id="adminPageTitle">Người dùng</h1><p id="adminPageCopy">Quản lý danh tính, phân quyền và bảo mật tài khoản.</p></div>
+            <div class="result-count" id="adminResultCount">0 bản ghi</div>
+          </header>
+
+          <section class="stats" id="statsPanel" aria-label="Chỉ số dịch vụ"></section>
+
+          <section class="content-panel" id="tab-users">
+            <header class="panel-header"><div class="panel-title"><h2>Danh sách người dùng</h2><p>Danh tính, phân quyền, trạng thái token và số máy ảo.</p></div><div class="panel-actions"><button class="icon-btn" onclick="loadUsers()" aria-label="Làm mới người dùng" title="Làm mới người dùng"><i data-lucide="refresh-cw" class="icon" aria-hidden="true">R</i></button></div></header>
+            <div id="usersTable"></div>
+          </section>
+
+          <section class="content-panel hidden" id="tab-tokens">
+            <header class="panel-header"><div class="panel-title"><h2>Tình trạng token</h2><p>Thông tin GitHub và Ngrok trên các tài khoản đang hoạt động.</p></div><div class="panel-actions"><button class="icon-btn" onclick="loadTokens()" aria-label="Làm mới token" title="Làm mới token"><i data-lucide="refresh-cw" class="icon" aria-hidden="true">R</i></button><button class="btn btn-accent btn-sm" id="checkAllBtn" onclick="checkAllTokens()"><i data-lucide="scan-search" class="icon icon-sm" aria-hidden="true">C</i>Kiểm tra tất cả</button><button class="btn btn-green btn-sm" onclick="exportTokens('live')" title="Xuất token sống"><i data-lucide="download" class="icon icon-sm" aria-hidden="true">D</i>Sống</button><button class="btn btn-red btn-sm" onclick="exportTokens('dead')" title="Xuất token chết"><i data-lucide="download" class="icon icon-sm" aria-hidden="true">D</i>Chết</button></div></header>
+            <div id="tokensTable"></div>
+          </section>
+
+          <section class="content-panel hidden" id="tab-machines">
+            <header class="panel-header"><div class="panel-title"><h2>Danh sách máy ảo</h2><p>Endpoint hiện tại, thông tin đăng nhập, trạng thái và thời gian tạo.</p></div><div class="panel-actions"><button class="icon-btn" onclick="loadMachines()" aria-label="Làm mới máy ảo" title="Làm mới máy ảo"><i data-lucide="refresh-cw" class="icon" aria-hidden="true">R</i></button></div></header>
+            <div id="machinesTable"></div>
+          </section>
+
+          <section class="content-panel hidden" id="tab-settings">
+            <header class="panel-header"><div class="panel-title"><h2>Cài đặt chung</h2><p>Giá trị mặc định cho các triển khai mới.</p></div></header>
+            <div class="settings-form"><div class="settings-card"><h3>Token dùng chung Ngrok Fast</h3><p>Dùng cho các triển khai Ngrok Fast mới cho tới khi bị thay thế hoặc đặt lại.</p><div class="form-row"><input type="password" id="ngrokFastInput" placeholder="2v8...xxxxxx" autocomplete="off" /><button class="btn btn-green" onclick="saveNgrokFastToken()">Lưu</button><button class="btn btn-red" onclick="resetNgrokFastToken()">Đặt lại</button></div><div id="ngrokFastStatus" style="margin-top:10px;font-size:.68rem;color:var(--text3);"></div></div></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var adminToken = '';
+var usersData = [];
+var tokensData = [];
+var machinesData = [];
+var activeAdminTab = 'users';
+var adminSearchByTab = { users: '', tokens: '', machines: '' };
+var confirmResolveFn = null;
+var API_BASE = location.hostname.startsWith('admin.') ? '/api/' : '/api/admin/';
+
+function renderAdminIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function adminIdentity(u) {
+  var username = u.username || String(u.email || '').split('@')[0] || 'Người dùng';
+  var initials = username.slice(0, 2).toUpperCase();
+  var image = u.avatarUrl ? '<img src="' + esc(u.avatarUrl) + '" alt=""/>' : '';
+  return '<div class="admin-identity"><span class="admin-avatar"><span>' + esc(initials) + '</span>' + image + '</span>'
+    + '<span class="admin-identity-copy"><strong>' + esc(username) + '</strong><span>' + esc(u.email) + '</span></span></div>';
+}
+
+function toast(msg, type) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type || 'success');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+
+function confirmDialog(title, message, okLabel) {
+  return new Promise(function(resolve) {
+    confirmResolveFn = resolve;
+    document.getElementById('modalContainer').innerHTML =
+      '<div class="modal-overlay" onclick="if(event.target===this)resolveConfirmDialog(false)">'
+      + '<div class="modal"><h3>' + esc(title) + '</h3>'
+      + '<p style="color:var(--text2);margin-bottom:14px;font-size:0.85rem;">' + esc(message) + '</p>'
+      + '<div style="display:flex;gap:8px;"><button class="btn btn-red" onclick="resolveConfirmDialog(true)">' + esc(okLabel || 'Xác nhận') + '</button>'
+      + '<button class="btn" style="background:transparent;color:var(--text3);border:1px solid var(--border);" onclick="resolveConfirmDialog(false)">Hủy</button></div>'
+      + '</div></div>';
+  });
+}
+
+function resolveConfirmDialog(value) {
+  document.getElementById('modalContainer').innerHTML = '';
+  if (confirmResolveFn) {
+    var fn = confirmResolveFn;
+    confirmResolveFn = null;
+    fn(value);
+  }
+}
+
+		function adminApi(path, data) {
+		  var payload = Object.assign({}, data || {}, { adminToken: adminToken });
+		  return fetch(API_BASE + path, {
+		    method: 'POST',
+		    headers: { 'Content-Type': 'application/json' },
+		    body: JSON.stringify(payload),
+		  }).then(function(r){
+		    return r.json().catch(function(){
+		      return r.text().then(function(t){
+		        throw new Error(t ? t.slice(0,200) : 'HTTP ' + r.status);
+		      });
+		    });
+		  }).then(function(j){
+		    if (j && j.error) throw new Error(j.error);
+		    return j;
+		  });
+		}
+
+	async function adminLogin() {
+	  var btn = document.querySelector('#loginCard .btn-accent');
+	  var origHtml = btn ? btn.innerHTML : '';
+	  try {
+	    var email = document.getElementById('adminEmailInput').value.trim();
+	    var pass = document.getElementById('adminPassInput').value;
+	    if (!pass) { toast('Vui lòng nhập mật khẩu', 'error'); return; }
+
+	    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="border-top-color:#0e1111;width:14px;height:14px;margin:0 auto;"></div>'; }
+
+	    var res = await fetch(API_BASE + 'login', {
+	      method: 'POST',
+	      headers: { 'Content-Type': 'application/json' },
+	      body: JSON.stringify({ password: pass, email: email || undefined })
+	    });
+
+	    var d;
+	    try { d = await res.json(); } catch(e) { throw new Error('Máy chủ trả về phản hồi không hợp lệ (HTTP ' + res.status + ')'); }
+
+	    if (d.error) { throw new Error(d.error); }
+
+	    adminToken = d.adminToken;
+	    document.getElementById('loginCard').classList.add('hidden');
+	    document.getElementById('dashboard').classList.remove('hidden');
+	    document.getElementById('adminNav').classList.remove('hidden');
+	    document.getElementById('adminSearchShell').classList.remove('hidden');
+	    document.getElementById('adminSessionControls').classList.remove('hidden');
+	    toast('Đăng nhập thành công');
+	    loadAll();
+	    renderAdminIcons();
+	  } catch(e) {
+	    toast(e.message || 'Đăng nhập thất bại', 'error');
+	  } finally {
+	    if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+	  }
+	}
+
+function loadAll() {
+  loadUsers();
+  loadTokens();
+  loadMachines();
+}
+
+function logoutAdmin() {
+  try {
+    fetch(API_BASE + 'logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminToken: adminToken })
+    }).catch(function(){});
+  } catch (e) {}
+  adminToken = '';
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('loginCard').classList.remove('hidden');
+  document.getElementById('adminNav').classList.add('hidden');
+  document.getElementById('adminSearchShell').classList.add('hidden');
+  document.getElementById('adminSessionControls').classList.add('hidden');
+  document.getElementById('adminPassInput').value = '';
+  clearAdminSearch();
+  toast('Đã đăng xuất');
+}
+
+function switchTab(name, btn) {
+  ['users','tokens','machines','settings'].forEach(function(t){
+    document.getElementById('tab-' + t).classList.add('hidden');
+  });
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  document.querySelectorAll('[data-admin-tab]').forEach(function(b){ b.classList.toggle('active', b.dataset.adminTab === name); });
+  activeAdminTab = name;
+  var meta = {
+    users: ['Người dùng', 'Quản lý danh tính, phân quyền và bảo mật tài khoản.', 'Tìm người dùng, email, chủ sở hữu hoặc vai trò'],
+    tokens: ['Token', 'Xem tình trạng token và tính khả dụng của thông tin đăng nhập.', 'Tìm chủ token, email hoặc trạng thái'],
+    machines: ['Máy ảo', 'Kiểm tra endpoint đang hoạt động và vòng đời máy.', 'Tìm người dùng, endpoint hoặc trạng thái'],
+    settings: ['Cài đặt', 'Quản lý giá trị mặc định dùng chung.', '']
+  }[name];
+  document.getElementById('adminPageTitle').textContent = meta[0];
+  document.getElementById('adminPageCopy').textContent = meta[1];
+  var searchShell = document.getElementById('adminSearchShell');
+  var searchInput = document.getElementById('adminSearchInput');
+  searchShell.classList.toggle('hidden', name === 'settings');
+  searchInput.placeholder = meta[2];
+  searchInput.value = adminSearchByTab[name] || '';
+  document.getElementById('adminSearchClear').classList.toggle('hidden', !searchInput.value);
+  if (name === 'settings') document.getElementById('adminResultCount').textContent = 'Cấu hình dùng chung';
+  else renderActiveAdminTab();
+  if (name === 'settings') loadNgrokFastToken();
+  renderAdminIcons();
+}
+
+function handleAdminSearch(value) {
+  if (activeAdminTab === 'settings') return;
+  adminSearchByTab[activeAdminTab] = String(value || '').trim().toLowerCase();
+  document.getElementById('adminSearchClear').classList.toggle('hidden', !adminSearchByTab[activeAdminTab]);
+  renderActiveAdminTab();
+}
+
+function clearAdminSearch() {
+  if (activeAdminTab !== 'settings') adminSearchByTab[activeAdminTab] = '';
+  var input = document.getElementById('adminSearchInput');
+  if (input) input.value = '';
+  var clear = document.getElementById('adminSearchClear');
+  if (clear) clear.classList.add('hidden');
+  renderActiveAdminTab();
+}
+
+function renderActiveAdminTab() {
+  if (activeAdminTab === 'users') renderUsers();
+  if (activeAdminTab === 'tokens') renderTokens();
+  if (activeAdminTab === 'machines') renderMachines();
+}
+
+function loadNgrokFastToken() {
+  var statusEl = document.getElementById('ngrokFastStatus');
+  statusEl.textContent = 'Đang tải...';
+  adminApi('get-ngrok-fast-token', {}).then(function(d) {
+    document.getElementById('ngrokFastInput').value = d.token || '';
+    statusEl.innerHTML = d.overridden
+      ? '<span style="color:var(--accent3);">● Đang dùng token tuỳ chỉnh (KV override)</span>'
+      : '<span style="color:var(--text3);">○ Đang dùng token mặc định trong code</span>';
+  }).catch(function(e){
+    statusEl.innerHTML = '<span style="color:var(--red);">' + e.message + '</span>';
+  });
+}
+
+function saveNgrokFastToken() {
+  var token = document.getElementById('ngrokFastInput').value.trim();
+  if (!token) return toast('Nhập token','error');
+  if (token.length < 10) return toast('Token quá ngắn','error');
+  adminApi('set-ngrok-fast-token', { token: token }).then(function() {
+    toast('Đã cập nhật Ngrok Fast token');
+    loadNgrokFastToken();
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function resetNgrokFastToken() {
+  confirmDialog('Đặt lại token', 'Đặt lại về token mặc định trong code?', 'Đặt lại').then(function(ok) {
+    if (!ok) return;
+    adminApi('set-ngrok-fast-token', { reset: true }).then(function() {
+      toast('Đã đặt lại về mặc định');
+      loadNgrokFastToken();
+    }).catch(function(e){ toast(e.message, 'error'); });
+  });
+}
+
+function tokenBadge(has, status) {
+  if (!has) return '<span class="badge badge-gray">NONE</span>';
+  return '<span class="badge ' + (status === 'dead' ? 'badge-red' : 'badge-green') + '">' + (status === 'dead' ? 'DEAD' : 'LIVE') + '</span>';
+}
+
+function matchesAdminQuery(tab, values) {
+  var query = adminSearchByTab[tab] || '';
+  if (!query) return true;
+  return values.map(function(value){ return String(value == null ? '' : value).toLowerCase(); }).join(' ').includes(query);
+}
+
+function setAdminResultCount(shown, total) {
+  var label = shown === total ? total + ' bản ghi' : shown + ' / ' + total + ' bản ghi';
+  document.getElementById('adminResultCount').textContent = label;
+}
+
+function emptyList(title, copy) {
+  return '<div class="empty-panel"><i data-lucide="search-x" class="icon" aria-hidden="true">0</i><strong>' + esc(title) + '</strong><span>' + esc(copy || '') + '</span></div>';
+}
+
+function actionButton(icon, label, handler, danger) {
+  return '<button type="button" class="icon-btn' + (danger ? ' danger' : '') + '" onclick="' + handler + '" aria-label="' + esc(label) + '" title="' + esc(label) + '"><i data-lucide="' + icon + '" class="icon icon-sm" aria-hidden="true">*</i></button>';
+}
+
+function tokenPreview(value, label) {
+  if (!value) return '<span class="secret-preview">Chưa có</span>';
+  var text = String(value);
+  var masked = '•••• ' + text.slice(-6);
+  return '<button type="button" class="secret-toggle" data-secret="' + esc(text) + '" data-masked="' + esc(masked) + '" data-revealed="false" onclick="toggleSecret(this)" aria-label="Hiện ' + esc(label || 'mã bí mật') + '"><span class="secret-text">' + esc(masked) + '</span><i data-lucide="eye" class="icon icon-sm" aria-hidden="true">*</i></button>';
+}
+
+function toggleSecret(button) {
+  var revealed = button.dataset.revealed === 'true';
+  button.dataset.revealed = revealed ? 'false' : 'true';
+  button.querySelector('.secret-text').textContent = revealed ? button.dataset.masked : button.dataset.secret;
+  button.setAttribute('aria-label', revealed ? 'Hiện mã bí mật' : 'Ẩn mã bí mật');
+}
+
+function safeHttpUrl(value) {
+  try {
+    var parsed = new URL(String(value || ''), location.origin);
+    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function formatAdminDate(value) {
+  var date = new Date(value);
+  return isNaN(date.getTime()) ? '-' : date.toLocaleString('vi-VN');
+}
+
+	function roleBadge(role) {
+	  if (!role || role === 'user') return '<span class="badge badge-gray">user</span>';
+	  if (role === 'seller') return '<span class="badge badge-green">seller</span>';
+	  if (role === 'admin') return '<span class="badge badge-admin">admin</span>';
+	  if (role === 'owner') return '<span class="badge badge-yellow">owner</span>';
+	  return '<span class="badge badge-gray">' + esc(role) + '</span>';
+	}
+
+	function roleLabel(role) {
+	  if (role === 'seller') return 'Người bán';
+	  if (role === 'admin') return 'Quản trị viên';
+	  if (role === 'owner') return 'Chủ sở hữu';
+	  return 'Người dùng';
+	}
+
+	function roleSelect(u) {
+	  var roles = ['user', 'seller', 'admin', 'owner'];
+	  var current = roles.includes(u.role) ? u.role : 'user';
+	  var options = roles.map(function(role) {
+	    return '<option value="' + role + '"' + (role === current ? ' selected' : '') + '>' + roleLabel(role) + '</option>';
+	  }).join('');
+	  return '<span class="role-control" data-role="' + current + '"><span class="role-dot" aria-hidden="true"></span><select class="role-select" aria-label="Đổi vai trò của ' + esc(u.email) + '" data-current="' + current + '" onchange="setRole(&quot;' + esc(u.email) + '&quot;,this.value,this)">' + options + '</select></span>';
+	}
+
+	function loadUsers() {
+	  adminApi('users').then(function(d) {
+	    usersData = d.users || [];
+	    updateStats();
+	    renderUsers();
+	  }).catch(function(e){ toast(e.message, 'error'); });
+	}
+
+	function renderUsers() {
+	  var filtered = usersData.filter(function(u) {
+	    return matchesAdminQuery('users', [u.username, u.email, u.role, u.owner, u.hasToken ? u.tokenStatus : 'none']);
+	  });
+	  if (activeAdminTab === 'users') setAdminResultCount(filtered.length, usersData.length);
+	  var head = '<div class="data-head user-grid"><span>Danh tính</span><span>Vai trò</span><span>Token</span><span>Chủ GitHub</span><span>Máy ảo</span><span></span></div>';
+	  var rows = filtered.map(function(u) {
+	    var emailArg = '&quot;' + esc(u.email) + '&quot;';
+	    var actions = actionButton('key-round', 'Đặt lại mật khẩu', 'showResetModal(' + emailArg + ')', false)
+	      + actionButton('trash-2', 'Xóa người dùng', 'showDeleteModal(' + emailArg + ')', true)
+	      + (u.hasToken ? actionButton('shield-off', 'Thu hồi token', 'revokeToken(' + emailArg + ')', true) : '');
+	    return '<div class="data-row user-grid">'
+	      + '<div class="data-cell identity">' + adminIdentity(u) + '</div>'
+	      + '<div class="data-cell" data-label="Vai trò">' + roleSelect(u) + '</div>'
+	      + '<div class="data-cell" data-label="Token">' + tokenBadge(u.hasToken, u.tokenStatus) + '</div>'
+	      + '<div class="data-cell mono" data-label="Chủ GitHub">' + esc(u.owner || '-') + '</div>'
+	      + '<div class="data-cell mono" data-label="Máy ảo">' + (Number(u.machineCount) || 0) + '</div>'
+	      + '<div class="data-actions">' + actions + '</div></div>';
+	  }).join('');
+	  document.getElementById('usersTable').innerHTML = filtered.length ? '<div class="data-list">' + head + rows + '</div>' : emptyList('Không tìm thấy người dùng', 'Thử từ khóa tìm kiếm khác.');
+	  renderAdminIcons();
+	}
+
+function setRole(email, role, select) {
+  var current = select ? select.dataset.current : '';
+  if (role === current) return;
+  if (select) select.disabled = true;
+  confirmDialog('Đổi vai trò', 'Đặt vai trò "' + roleLabel(role) + '" cho ' + email + '?', 'Xác nhận').then(function(ok) {
+    if (!ok) {
+      if (select) { select.value = current; select.disabled = false; }
+      return;
+    }
+    adminApi('set-role', { email: email, role: role }).then(function(d) {
+      toast('Đã đặt vai trò: ' + d.email + ' -> ' + d.role);
+      loadUsers();
+    }).catch(function(e){
+      if (select) select.value = current;
+      toast(e.message, 'error');
+    }).finally(function(){
+      if (select) select.disabled = false;
+    });
+  });
+}
+
+function loadTokens() {
+  adminApi('tokens').then(function(d) {
+    tokensData = d.tokens || [];
+    updateStats();
+    renderTokens();
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function renderTokens() {
+  var filtered = tokensData.filter(function(t) {
+    return matchesAdminQuery('tokens', [t.email, t.owner, t.status, t.deadReason, t.githubToken ? 'github' : '', t.ngrokToken ? 'ngrok' : '']);
+  });
+  if (activeAdminTab === 'tokens') setAdminResultCount(filtered.length, tokensData.length);
+  var head = '<div class="data-head token-grid"><span>Tài khoản</span><span>GitHub</span><span>Ngrok</span><span>Chủ sở hữu</span><span>Trạng thái</span><span></span></div>';
+  var rows = filtered.map(function(t) {
+    var emailArg = '&quot;' + esc(t.email) + '&quot;';
+    var status = t.status === 'dead' ? 'DEAD' : 'LIVE';
+    var action = t.githubToken ? actionButton('scan-search', 'Kiểm tra token', 'checkOneToken(' + emailArg + ',this)', false) : '';
+    return '<div class="data-row token-grid">'
+      + '<div class="data-cell identity"><span class="record-title">' + esc(t.email) + '</span><span class="record-sub">' + esc(t.deadReason || 'Không có lỗi được báo cáo') + '</span></div>'
+      + '<div class="data-cell" data-label="GitHub">' + tokenPreview(t.githubToken, 'token GitHub') + '</div>'
+      + '<div class="data-cell" data-label="Ngrok">' + tokenPreview(t.ngrokToken, 'token Ngrok') + '</div>'
+      + '<div class="data-cell mono" data-label="Chủ sở hữu">' + esc(t.owner || '-') + '</div>'
+      + '<div class="data-cell" data-label="Trạng thái"><span class="badge ' + (status === 'DEAD' ? 'badge-red' : 'badge-green') + '">' + status + '</span></div>'
+      + '<div class="data-actions">' + action + '</div></div>';
+  }).join('');
+  document.getElementById('tokensTable').innerHTML = filtered.length ? '<div class="data-list">' + head + rows + '</div>' : emptyList('Không tìm thấy token', 'Thử từ khóa tìm kiếm khác.');
+  renderAdminIcons();
+}
+
+function loadMachines() {
+  adminApi('machines').then(function(d) {
+    machinesData = d.machines || [];
+    updateStats();
+    renderMachines();
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function renderMachines() {
+  var filtered = machinesData.filter(function(m) {
+    var status = m.isExpired ? 'expired' : m.status === 'dead' ? 'dead' : 'active';
+    return matchesAdminQuery('machines', [m.userEmail, m.ngrok_url, status, formatAdminDate(m.createdAt)]);
+  });
+  if (activeAdminTab === 'machines') setAdminResultCount(filtered.length, machinesData.length);
+  var head = '<div class="data-head machine-grid"><span>Người dùng</span><span>Endpoint</span><span>Mật khẩu</span><span>Trạng thái</span><span>Đã tạo</span></div>';
+  var rows = filtered.map(function(m) {
+    var status = m.isExpired ? 'EXPIRED' : m.status === 'dead' ? 'DEAD' : 'ACTIVE';
+    var url = safeHttpUrl(m.ngrok_url);
+    var urlCell = url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(m.ngrok_url) + '</a>' : '-';
+    return '<div class="data-row machine-grid' + (m.isExpired ? ' is-muted' : '') + '">'
+      + '<div class="data-cell identity"><span class="record-title">' + esc(m.userEmail || '-') + '</span><span class="record-sub">' + esc(m.repo || 'Máy ảo cloud') + '</span></div>'
+      + '<div class="data-cell mono" data-label="Endpoint">' + urlCell + '</div>'
+      + '<div class="data-cell" data-label="Mật khẩu">' + tokenPreview(m.password || 'hieudz', 'mật khẩu máy') + '</div>'
+      + '<div class="data-cell" data-label="Trạng thái"><span class="badge ' + (status === 'ACTIVE' ? 'badge-green' : 'badge-red') + '">' + status + '</span></div>'
+      + '<div class="data-cell mono" data-label="Đã tạo">' + esc(formatAdminDate(m.createdAt)) + '</div></div>';
+  }).join('');
+  document.getElementById('machinesTable').innerHTML = filtered.length ? '<div class="data-list">' + head + rows + '</div>' : emptyList('Không tìm thấy máy ảo', 'Thử từ khóa tìm kiếm khác.');
+  renderAdminIcons();
+}
+
+function updateStats() {
+  var totalUsers = usersData.length || 0;
+  var liveTokens = tokensData.filter(function(t){ return t.status !== 'dead'; }).length;
+  var deadTokens = tokensData.filter(function(t){ return t.status === 'dead'; }).length;
+  var activeMachines = machinesData.filter(function(m){ return !m.isExpired && m.status !== 'dead'; }).length;
+  document.getElementById('statsPanel').innerHTML =
+    '<div class="stat"><i data-lucide="users" class="icon" aria-hidden="true">U</i><div class="stat-num">' + totalUsers + '</div><div class="stat-label">Tổng người dùng</div></div>'
+    + '<div class="stat"><i data-lucide="shield-check" class="icon" aria-hidden="true">L</i><div class="stat-num" style="color:var(--accent3)">' + liveTokens + '</div><div class="stat-label">Token sống</div></div>'
+    + '<div class="stat"><i data-lucide="shield-alert" class="icon" aria-hidden="true">D</i><div class="stat-num" style="color:var(--red)">' + deadTokens + '</div><div class="stat-label">Token chết</div></div>'
+    + '<div class="stat"><i data-lucide="server" class="icon" aria-hidden="true">M</i><div class="stat-num" style="color:var(--accent3)">' + activeMachines + '</div><div class="stat-label">Máy đang chạy</div></div>';
+  document.getElementById('navUsersCount').textContent = totalUsers;
+  document.getElementById('navTokensCount').textContent = tokensData.length || 0;
+  document.getElementById('navMachinesCount').textContent = machinesData.length || 0;
+  renderAdminIcons();
+}
+
+function showResetModal(email) {
+  document.getElementById('modalContainer').innerHTML =
+    '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'
+    + '<div class="modal"><h3>Đặt lại mật khẩu</h3>'
+    + '<p style="color:var(--text2);margin-bottom:14px;font-size:0.85rem;">' + email + '</p>'
+    + '<input type="password" id="newPassInput" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"/>'
+    + '<div style="display:flex;gap:8px;"><button class="btn btn-accent" onclick="doResetPassword(&quot;' + email + '&quot;)">Đặt lại</button>'
+    + '<button class="btn" style="background:transparent;color:var(--text3);border:1px solid var(--border);" onclick="closeModal()">Hủy</button></div>'
+    + '</div></div>';
+}
+
+function showDeleteModal(email) {
+  document.getElementById('modalContainer').innerHTML =
+    '<div class="modal-overlay" onclick="if(event.target===this)closeModal()">'
+    + '<div class="modal"><h3>Xóa người dùng</h3>'
+    + '<p style="color:var(--red);margin-bottom:14px;font-size:0.85rem;">Xóa <strong>' + email + '</strong>? Hành động này không thể hoàn tác.</p>'
+    + '<div style="display:flex;gap:8px;"><button class="btn" style="background:var(--red);color:#fff;" onclick="doDeleteUser(&quot;' + email + '&quot;)">Xóa</button>'
+    + '<button class="btn" style="background:transparent;color:var(--text3);border:1px solid var(--border);" onclick="closeModal()">Hủy</button></div>'
+    + '</div></div>';
+}
+
+function closeModal() {
+  document.getElementById('modalContainer').innerHTML = '';
+}
+
+function doResetPassword(email) {
+  var newPass = document.getElementById('newPassInput').value;
+  if (!newPass || newPass.length < 6) return toast('Tối thiểu 6 ký tự', 'error');
+  adminApi('reset-password', { email: email, newPassword: newPass }).then(function() {
+    closeModal();
+    toast('Đã đặt lại mật khẩu cho ' + email);
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function doDeleteUser(email) {
+  adminApi('delete-user', { email: email }).then(function() {
+    closeModal();
+    loadUsers();
+    toast('Đã xóa người dùng: ' + email);
+  }).catch(function(e){ toast(e.message, 'error'); });
+}
+
+function revokeToken(email) {
+  confirmDialog('Thu hồi token', 'Thu hồi token GitHub của ' + email + '?', 'Thu hồi').then(function(ok) {
+    if (!ok) return;
+    adminApi('revoke-token', { email: email }).then(function() {
+      loadUsers();
+      loadTokens();
+      toast('Đã thu hồi token của ' + email);
+    }).catch(function(e){ toast(e.message, 'error'); });
+  });
+}
+
+function checkAllTokens() {
+  var btn = document.getElementById('checkAllBtn');
+  btn.disabled = true;
+  var orig = btn.innerHTML;
+  btn.textContent = 'Đang kiểm tra...';
+  adminApi('check-tokens', {}).then(function(d) {
+    toast('Đã kiểm tra ' + d.total + ' · ' + d.aliveCount + ' sống · ' + d.deadCount + ' chết');
+    loadTokens();
+    loadUsers();
+  }).catch(function(e){ toast(e.message, 'error'); }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    renderAdminIcons();
+  });
+}
+
+function checkOneToken(email, btn) {
+  btn.disabled = true;
+  var orig = btn.innerHTML;
+  btn.textContent = '...';
+  adminApi('check-tokens', { emails: [email] }).then(function(d) {
+    var r = (d.results && d.results[0]) || {};
+    if (r.alive) toast('LIVE · ' + email + (r.login ? ' (' + r.login + ')' : ''));
+    else toast('DEAD · ' + email + ' · ' + (r.reason || ''), 'error');
+    loadTokens();
+    loadUsers();
+  }).catch(function(e){
+    toast(e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    renderAdminIcons();
+  });
+}
+
+	function exportTokens(type) {
+	  var filtered = tokensData.filter(function(t) {
+	    return type === 'live' ? t.status !== 'dead' : t.status === 'dead';
+	  });
+	  var text = filtered.map(function(t){ return t.githubToken; }).join('\n');
+	  var blob = new Blob([text], { type: 'text/plain' });
+	  var a = document.createElement('a');
+	  a.href = URL.createObjectURL(blob);
+	  a.download = 'tokens-' + type + '.txt';
+	  a.click();
+	  toast('Đã xuất ' + filtered.length + ' token ' + (type === 'live' ? 'sống' : 'chết'));
+	}
+</script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script>renderAdminIcons();</script>
+</body>
+</html>

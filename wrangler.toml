@@ -10,7 +10,7 @@ fallthrough = true
 
 [[rules]]
 type = "Text"
-globs = ["**/*.html"]
+globs = ["**/*.html", "**/*.txt"]
 fallthrough = true
 
 [vars]
@@ -37,6 +37,6 @@ binding = "DB"
 database_name = "free-vps-db"
 database_id = "fcf50956-58e2-484e-9ac6-338bef51d439"
 
-# Cron trigger: tự động xoá máy hết hạn mỗi 30 phút
+# Cron trigger: tu dong xoa may het han moi 30 phut
 [triggers]
 crons = ["*/30 * * * *"]

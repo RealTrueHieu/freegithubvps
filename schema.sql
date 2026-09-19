@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
   github_token TEXT,
   ngrok_token TEXT,
   owner TEXT,
-  credits INTEGER DEFAULT 0,
   token_status TEXT DEFAULT 'active',
   token_dead_reason TEXT,
   token_dead_at TEXT,

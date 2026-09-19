@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+	<html lang="vi">
+	<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+	<title>TrueTeam Shop</title>
+	<meta name="theme-color" content="#0e0c12"/>
+	<meta name="description" content="TrueTeam Shop — Sản phẩm & dịch vụ chất lượng"/>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+	<style>
+	*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+	:root{
+	  --bg:#0e0c12;--bg2:#131117;--surface:#19171f;--surface2:#211e29;--surface3:#2a2634;
+	  --border:#302c3a;--border2:#443d50;--border3:#5b526a;
+	  --text:#f5f2fa;--text2:#b6afc2;--text3:#7f778d;
+	  --accent:#b895ff;--accent2:#9f7aef;--accent3:#dccfff;
+	  --accent-glow:rgba(184,149,255,0.17);
+	  --blue:#75d5ff;--blue-glow:rgba(117,213,255,0.16);
+	  --red:#ef4444;--yellow:#eab308;--green:#22c55e;
+	  --orange:#f97316;--purple:#b895ff;
+	  --radius:6px;--radius-lg:8px;--radius-xl:8px;
+	  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+	  --font-mono:'JetBrains Mono',Consolas,monospace;
+	  --banner-h:40px;
+	  --safe-bottom:env(safe-area-inset-bottom,0px);
+	}
+	html{scroll-behavior:smooth}
+	body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;letter-spacing:0;padding-bottom:calc(20px + var(--safe-bottom));}
+	body.banner-on{padding-top:var(--banner-h)}
+	::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+	.icon{width:16px;height:16px;stroke-width:1.8;flex:0 0 auto}.icon-sm{width:14px;height:14px}
+
+	/* ── Banner Marquee ── */
+	.shop-banner{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--banner-h);overflow:hidden;background:#e8ddff;border-bottom:1px solid #c9b4f5;display:flex;align-items:center;cursor:pointer;user-select:none;}
+	.banner-track{display:inline-flex;white-space:nowrap;animation:marquee 25s linear infinite;}
+	.shop-banner:hover .banner-track{animation-play-state:paused;}
+	.banner-track span{display:inline-block;padding:0 60px;font-size:0.78rem;font-weight:700;color:#241b33;letter-spacing:0;}
+	@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+	/* ── Layout ── */
+	.container{max-width:1100px;margin:0 auto;padding:20px 16px;}
+	@media(min-width:640px){.container{padding:28px 24px}}
+
+	/* ── Top Bar ── */
+	.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0 20px;animation:fadeUp .5s ease both;}
+	.topbar-left{display:flex;align-items:center;gap:12px;}
+	.logo-img{width:42px;height:42px;border-radius:var(--radius-lg);object-fit:cover;border:1px solid var(--border2);background:var(--surface);}
+	.logo-placeholder{width:42px;height:42px;border-radius:var(--radius-lg);background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:#1d122c;box-shadow:0 2px 12px var(--accent-glow);}
+	.topbar-title{font-size:1.2rem;font-weight:700;color:#fff;letter-spacing:0;}
+	.topbar-sub{font-size:0.7rem;color:var(--text3);margin-top:1px;}
+	.btn-seller{padding:8px 14px;border-radius:var(--radius);background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:0.76rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-sans);display:flex;align-items:center;gap:7px;}
+	.btn-seller:hover{border-color:var(--accent);color:var(--accent3);background:rgba(184,149,255,0.08);}
+
+	/* ── Hero Section ── */
+	.hero{position:relative;min-height:270px;margin:4px 0 24px;padding:28px;overflow:hidden;border:1px solid var(--border2);border-radius:8px;background-image:linear-gradient(90deg,rgba(14,12,18,.18),rgba(14,12,18,.9)),url('/assets/community-art.webp');background-size:cover;background-position:center 28%;text-align:left;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;animation:fadeUp .6s ease both .1s;}
+	.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:4px;background:rgba(14,12,18,.72);border:1px solid rgba(220,207,255,.3);font-size:0.66rem;font-weight:600;color:var(--accent3);margin-bottom:12px;}
+	.hero h1{max-width:540px;font-size:1.65rem;font-weight:800;color:#fff;letter-spacing:0;line-height:1.3;margin-bottom:8px;}
+	.hero h1 em{font-style:normal;color:var(--accent);}
+	.hero p{font-size:0.82rem;color:#d8d1e1;max-width:480px;margin:0;}
+
+	/* ── Category Tabs ── */
+	.cat-tabs{display:flex;gap:8px;padding:4px 0 20px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;}
+	.cat-tabs::-webkit-scrollbar{display:none;}
+	.cat-tab{padding:7px 16px;border-radius:9999px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:var(--font-sans);}
+	.cat-tab:hover{border-color:var(--border3);color:var(--text);}
+	.cat-tab.active{background:var(--accent);color:#1d122c;border-color:var(--accent);box-shadow:0 2px 10px var(--accent-glow);}
+	.shop-tools{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;}
+	.product-search{width:min(320px,100%);height:38px;padding:0 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);display:flex;align-items:center;gap:8px;}
+	.product-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+	.product-search input{height:36px;padding:0;margin:0;border:0;background:transparent;box-shadow:none;font-size:.75rem;}.product-search input:focus{border:0;box-shadow:none;}
+
+	/* ── Product Grid ── */
+	.section-title{font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+	.section-title .count{font-size:0.7rem;color:var(--text3);font-weight:500;}
+	.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;}
+	@media(max-width:540px){.product-grid{grid-template-columns:1fr 1fr;gap:10px;}}
+
+	.product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:all .2s;cursor:default;animation:fadeUp .5s ease both;}
+	.product-card:hover{border-color:var(--border3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+	.product-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface2);display:block;}
+	.product-img-placeholder{width:100%;aspect-ratio:1;background:linear-gradient(135deg,var(--surface2),var(--surface3));display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text3);}
+	.product-info{padding:12px;}
+	.product-name{font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+	.product-desc{font-size:0.7rem;color:var(--text3);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
+	.product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+	.product-price{font-size:0.9rem;font-weight:700;color:var(--accent);}
+	.product-price.free{color:var(--blue);}
+	.product-cat{max-width:100%;font-size:0.6rem;padding:2px 8px;border-radius:4px;background:var(--surface3);color:var(--text3);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+	/* ── QR / Payment Section ── */
+	.payment-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;margin-bottom:32px;animation:fadeUp .5s ease both .3s;}
+	.payment-inner{display:flex;flex-wrap:wrap;gap:24px;align-items:center;}
+	.qr-box{flex-shrink:0;text-align:center;}
+	.qr-box img{width:160px;height:160px;border-radius:var(--radius-lg);border:2px solid var(--border2);background:#fff;padding:8px;object-fit:contain;}
+	.qr-box .qr-label{font-size:0.7rem;color:var(--text3);margin-top:8px;}
+	.bank-info{flex:1;min-width:200px;}
+	.bank-info h3{font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+	.bank-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;}
+	.bank-row .label{font-size:0.7rem;color:var(--text3);min-width:80px;}
+	.bank-row .value{flex:1;min-width:0;font-size:0.82rem;color:var(--text);font-weight:500;font-family:var(--font-mono);overflow-wrap:anywhere;}
+	.copy-btn{padding:3px 8px;border-radius:var(--radius);background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:0.65rem;font-weight:600;cursor:pointer;transition:all .12s;margin-left:auto;}
+	.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+	/* ── Empty State ── */
+	.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+	.empty-state .icon{font-size:2.5rem;margin-bottom:12px;}
+	.empty-state p{font-size:0.82rem;}
+
+	/* ── Seller Workspace ── */
+	body.modal-open{overflow:hidden;}
+	.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,3,7,.78);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:16px;}
+	.modal-overlay.open{display:flex;}
+	.modal{width:min(980px,100%);height:min(720px,calc(100dvh - 32px));border:1px solid var(--border2);border-radius:8px;background:var(--surface);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);box-shadow:0 24px 70px rgba(0,0,0,.55);animation:modalIn .2s ease;}
+	.modal.auth-mode{width:min(430px,100%);height:auto;max-height:calc(100dvh - 32px);}
+	@keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+	.modal-header{min-height:64px;padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+	.modal-title-wrap{min-width:0;display:flex;align-items:center;gap:10px;}.modal-title-icon{width:34px;height:34px;border:1px solid rgba(184,149,255,.3);border-radius:6px;background:rgba(184,149,255,.1);color:var(--accent3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+	.modal-header h2{font-size:.88rem;font-weight:700;color:#fff;}.modal-header p{margin-top:3px;color:var(--text3);font-size:.62rem;}
+	.modal-close{width:34px;height:34px;border-radius:5px;background:transparent;border:1px solid var(--border2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+	.modal-close:hover{border-color:var(--red);color:var(--red);}
+	.seller-login{padding:26px;}.seller-login-copy{margin-bottom:20px;}.seller-login-copy h3{font-size:1rem;}.seller-login-copy p{margin-top:6px;color:var(--text3);font-size:.7rem;line-height:1.5;}
+	#sellerDashboard{min-height:0;display:grid;grid-template-columns:205px minmax(0,1fr);}
+	.seller-sidebar{padding:14px 12px;border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;gap:6px;}
+	.seller-identity{padding:10px;margin-bottom:4px;border:1px solid var(--border);border-radius:6px;background:var(--surface);}.seller-identity strong{display:block;font-size:.72rem;}.seller-identity span{display:block;margin-top:4px;color:var(--accent3);font:600 .57rem var(--font-mono);text-transform:uppercase;}
+	.seller-tab{width:100%;min-height:40px;padding:0 10px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text3);display:flex;align-items:center;gap:9px;font:500 .72rem var(--font-sans);cursor:pointer;text-align:left;}.seller-tab:hover{color:var(--text2);background:rgba(255,255,255,.025)}.seller-tab.active{color:var(--text);border-color:rgba(184,149,255,.28);background:rgba(184,149,255,.11)}
+	.seller-sidebar-spacer{flex:1;}.seller-logout{color:var(--red);}
+	.seller-content{min-width:0;min-height:0;overflow-y:auto;padding:20px;}
+	.seller-panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;}.seller-panel-header h3{font-size:.9rem;}.seller-panel-header p{margin-top:5px;color:var(--text3);font-size:.68rem;line-height:1.5;}
+	.seller-section{margin:0;}.field-group{margin-bottom:12px;}.field-label{font-size:.66rem;color:var(--text2);display:block;margin-bottom:6px;}
+	input,select,textarea{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-sans);font-size:.8rem;outline:none;transition:all .12s;}
+	input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+	textarea{resize:vertical;min-height:76px;}
+	.btn{min-height:36px;padding:8px 14px;border:1px solid transparent;border-radius:5px;cursor:pointer;font-weight:600;font-size:.72rem;font-family:var(--font-sans);transition:all .12s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+	.btn:active{transform:scale(.98);}.btn-primary{background:var(--accent);color:#1d122c;border-color:var(--accent);}.btn-primary:hover{background:var(--accent2);box-shadow:0 2px 12px var(--accent-glow);}.btn-outline{background:transparent;color:var(--text2);border-color:var(--border2);}.btn-outline:hover{border-color:var(--accent);color:var(--accent);}.btn-red{background:transparent;color:var(--red);border-color:var(--border2);}.btn-red:hover{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}.btn-sm{min-height:32px;padding:5px 10px;font-size:.68rem;}
+	.hidden{display:none!important}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.settings-grid .wide{grid-column:1/-1;}.seller-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+	.asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.asset-card{min-width:0;padding:14px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);}.asset-card h4{font-size:.76rem;}.asset-card p{margin-top:5px;color:var(--text3);font-size:.62rem;line-height:1.5;}.asset-preview{height:150px;margin:14px 0;border:1px dashed var(--border2);border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--text3);}.asset-preview img{max-width:100%;max-height:100%;object-fit:contain;}.file-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}.file-picker{width:100%;min-height:40px;padding:0 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);display:flex;align-items:center;gap:8px;font-size:.68rem;cursor:pointer;}.file-picker span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.asset-card .btn{width:100%;margin-top:8px;}
+	.product-workspace{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;align-items:start;}.product-form-panel{padding-right:18px;border-right:1px solid var(--border);}.seller-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}.seller-list-toolbar strong{font-size:.76rem;}.seller-list-toolbar .product-search{width:min(260px,100%);margin:0;}
+	.seller-product-list{display:flex;flex-direction:column;gap:7px;}.seller-product-item{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);}.seller-product-item img,.seller-product-placeholder{width:48px;height:48px;border-radius:5px;object-fit:cover;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}.seller-product-item .sp-info{flex:1;min-width:0;}.seller-product-item .sp-name{font-size:.72rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.seller-product-item .sp-meta{margin-top:4px;color:var(--text3);font-size:.61rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.seller-product-item .sp-price{color:var(--accent3);font-weight:600;}.seller-delete{width:34px;height:34px;padding:0;flex:0 0 auto;}.seller-empty{padding:42px 16px;text-align:center;color:var(--text3);font-size:.7rem;}
+
+	/* ── Toast ── */
+	.toast-box{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;width:92%;max-width:360px;}
+	.toast{padding:10px 16px;border-radius:var(--radius);margin-bottom:6px;font-size:0.78rem;font-weight:500;animation:slideUp .25s ease;text-align:center;border-left:3px solid var(--accent);background:var(--surface);box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+	.toast-err{border-left-color:var(--red);}
+	@keyframes slideUp{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+	@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+	/* ── Footer ── */
+	.footer{text-align:center;padding:20px 0;color:var(--text3);font-size:0.7rem;border-top:1px solid var(--border);margin-top:20px;}
+	.footer a{color:var(--accent);text-decoration:none;}
+	button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+	button:disabled{opacity:.45;pointer-events:none;}
+	@media(max-width:760px){
+	  #sellerDashboard{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);}.seller-sidebar{padding:8px 10px;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-direction:row;overflow-x:auto;scrollbar-width:none}.seller-sidebar::-webkit-scrollbar{display:none}.seller-identity,.seller-sidebar-spacer{display:none}.seller-tab{min-width:120px;width:auto;flex:0 0 auto}.seller-tab.seller-logout{min-width:44px;font-size:0}.seller-content{padding:16px}.product-workspace{grid-template-columns:1fr}.product-form-panel{padding:0 0 18px;border-right:0;border-bottom:1px solid var(--border)}
+	}
+	@media(max-width:540px){
+	  .hero{min-height:220px;padding:20px;background-position:42% 28%;}
+	  .hero h1{font-size:1.35rem;}
+	  .payment-inner{align-items:flex-start;}
+	  .bank-row{display:grid;grid-template-columns:72px minmax(0,1fr) auto;}
+	  .shop-tools{align-items:stretch;flex-direction:column}.product-search{width:100%}.modal-overlay{padding:0;align-items:flex-end}.modal:not(.auth-mode){width:100%;height:100dvh;border-radius:0;border-left:0;border-right:0}.modal.auth-mode{width:calc(100% - 24px);margin:12px}.modal-header{padding:10px 14px}.seller-content{padding:14px}.settings-grid,.asset-grid{grid-template-columns:1fr}.settings-grid .wide{grid-column:auto}.seller-panel-header{flex-direction:column}.seller-actions{justify-content:stretch}.seller-actions .btn{flex:1}.seller-list-toolbar{align-items:stretch;flex-direction:column}.seller-list-toolbar .product-search{width:100%}
+	}
+	@media(max-width:380px){.product-grid{grid-template-columns:1fr;}.topbar-title{font-size:1rem;}.btn-seller{padding:8px 10px;}}
+	@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
+	</style>
+	</head>
+	<body id="shopBody">
+	<div class="toast-box" id="toastBox"></div>
+
+	<!-- Banner -->
+	<div class="shop-banner hidden" id="shopBanner">
+	  <div class="banner-track" id="bannerTrack"></div>
+	</div>
+
+	<div class="container">
+	  <!-- Top Bar -->
+	  <div class="topbar">
+	    <div class="topbar-left">
+	      <div class="logo-placeholder" id="logoDisplay">T</div>
+	      <div>
+	        <div class="topbar-title">TrueTeam Shop</div>
+	        <div class="topbar-sub">Chất lượng — Uy tín — Tận tâm</div>
+	      </div>
+	    </div>
+	    <button class="btn-seller" id="sellerBtn" onclick="openSellerModal()"><i data-lucide="store" class="icon icon-sm" aria-hidden="true">S</i>Quản lý shop</button>
+	  </div>
+
+	  <!-- Hero -->
+	  <div class="hero" id="heroSection">
+	    <div class="hero-badge"><i data-lucide="sparkles" class="icon icon-sm" aria-hidden="true">*</i>TrueTeam storefront</div>
+	    <h1 id="heroTitle">Sản phẩm <em>chất lượng</em> dành cho bạn</h1>
+	    <p id="heroDesc">Khám phá các sản phẩm và dịch vụ tốt nhất từ TrueTeam Community</p>
+	  </div>
+
+	  <div class="shop-tools">
+	    <div class="cat-tabs" id="catTabs"><button class="cat-tab active" data-cat="all" onclick="filterCategory('all',this)">Tất cả</button></div>
+	    <label class="product-search" for="productSearchInput"><i data-lucide="search" class="icon icon-sm" aria-hidden="true">?</i><input type="search" id="productSearchInput" placeholder="Tìm sản phẩm" autocomplete="off" oninput="searchProducts(this.value)" /></label>
+	  </div>
+
+	  <div class="section-title">Sản phẩm <span class="count" id="productCount"></span></div>
+	  <div class="product-grid" id="productGrid"></div>
+
+	  <!-- Empty state -->
+	  <div class="empty-state hidden" id="emptyState">
+	    <i data-lucide="package-search" class="icon" aria-hidden="true">0</i>
+	    <p id="emptyStateText">Chưa có sản phẩm nào. Quay lại sau nhé!</p>
+	  </div>
+
+	  <!-- Payment Section -->
+	  <div class="payment-section hidden" id="paymentSection">
+	    <div class="payment-inner">
+	      <div class="qr-box" id="qrBox">
+	        <div style="width:160px;height:160px;border-radius:var(--radius-lg);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:0.75rem;">QR chưa có</div>
+	        <div class="qr-label">Quét QR để thanh toán</div>
+	      </div>
+	      <div class="bank-info">
+	        <h3><i data-lucide="landmark" class="icon icon-sm" aria-hidden="true">B</i>Thông tin thanh toán</h3>
+	        <div class="bank-row"><span class="label">Ngân hàng</span><span class="value" id="bankName">—</span><button class="copy-btn" onclick="copyText('bankName')">Copy</button></div>
+	        <div class="bank-row"><span class="label">Số TK</span><span class="value" id="bankAccount">—</span><button class="copy-btn" onclick="copyText('bankAccount')">Copy</button></div>
+	        <div class="bank-row"><span class="label">Chủ TK</span><span class="value" id="bankHolder">—</span><button class="copy-btn" onclick="copyText('bankHolder')">Copy</button></div>
+	      </div>
+    </div>
+	  </div>
+
+	  <div class="footer">
+	    <p>© 2026 <a href="https://trueteamcommunity.dpdns.org">TrueTeam Community</a>. All rights reserved.</p>
+	  </div>
+	</div>
+
+	<!-- Seller Modal -->
+	<div class="modal-overlay" id="sellerModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+	  <div class="modal auth-mode" id="sellerPanel">
+	    <div class="modal-header">
+	      <div class="modal-title-wrap"><span class="modal-title-icon"><i data-lucide="store" class="icon" aria-hidden="true">S</i></span><div><h2 id="modalTitle">Quyền seller</h2><p id="modalSubtitle">Quản lý gian hàng TrueTeam</p></div></div>
+      <button type="button" class="modal-close" onclick="closeSellerModal()" aria-label="Đóng không gian seller"><i data-lucide="x" class="icon" aria-hidden="true">x</i></button>
+	    </div>
+
+	    <form id="sellerLoginForm" class="seller-login" onsubmit="event.preventDefault();doSellerLogin();">
+	      <div class="seller-login-copy"><h3>Đăng nhập vào không gian của bạn</h3><p>Tài khoản Seller, Admin và Owner có thể quản lý shop.</p></div>
+	      <div class="field-group">
+	        <label class="field-label" for="sellerEmail">Địa chỉ email</label>
+	        <input type="email" id="sellerEmail" placeholder="seller@example.com" autocomplete="email" required />
+	      </div>
+	      <div class="field-group">
+	        <label class="field-label" for="sellerPass">Mật khẩu</label>
+        <input type="password" id="sellerPass" placeholder="Nhập mật khẩu" autocomplete="current-password" required />
+	      </div>
+	      <button type="submit" class="btn btn-primary" id="sellerLoginBtn" style="width:100%"><i data-lucide="log-in" class="icon icon-sm" aria-hidden="true">&gt;</i>Đăng nhập</button>
+	    </form>
+
+	    <div id="sellerDashboard" class="hidden">
+	      <aside class="seller-sidebar" role="tablist" aria-label="Seller workspace">
+	        <div class="seller-identity"><strong id="sellerIdentityName">Quản lý cửa hàng</strong><span id="sellerIdentityRole">Đã xác thực</span></div>
+	        <button type="button" class="seller-tab active" data-seller-tab="settings" onclick="switchSellerTab('settings',this)"><i data-lucide="sliders-horizontal" class="icon" aria-hidden="true">S</i>Cài đặt shop</button>
+	        <button type="button" class="seller-tab" data-seller-tab="assets" onclick="switchSellerTab('assets',this)"><i data-lucide="images" class="icon" aria-hidden="true">A</i>Tài nguyên thương hiệu</button>
+	        <button type="button" class="seller-tab" data-seller-tab="products" onclick="switchSellerTab('products',this)"><i data-lucide="package" class="icon" aria-hidden="true">P</i>Sản phẩm</button>
+	        <div class="seller-sidebar-spacer"></div>
+	        <button type="button" class="seller-tab seller-logout" onclick="doSellerLogout()"><i data-lucide="log-out" class="icon" aria-hidden="true">x</i>Đăng xuất</button>
+	      </aside>
+
+	      <div class="seller-content">
+	        <section class="seller-panel" id="seller-tab-settings">
+	          <header class="seller-panel-header"><div><h3>Cài đặt shop</h3><p>Banner dùng chung và thông tin thanh toán.</p></div></header>
+	          <div class="settings-grid">
+	            <div class="field-group wide"><label class="field-label" for="sBannerText">Chữ banner</label><textarea id="sBannerText" placeholder="TrueTeam Shop — Sản phẩm chất lượng!"></textarea></div>
+	            <div class="field-group"><label class="field-label" for="sBankName">Tên ngân hàng</label><input type="text" id="sBankName" placeholder="VD: MB Bank" /></div>
+	            <div class="field-group"><label class="field-label" for="sBankAccount">Số tài khoản</label><input type="text" id="sBankAccount" placeholder="VD: 0123456789" /></div>
+	            <div class="field-group wide"><label class="field-label" for="sBankHolder">Chủ tài khoản</label><input type="text" id="sBankHolder" placeholder="VD: NGUYEN VAN A" /></div>
+	          </div>
+	          <div class="seller-actions"><button type="button" class="btn btn-primary" id="sellerSettingsSaveBtn" onclick="saveSellerSettings()"><i data-lucide="save" class="icon icon-sm" aria-hidden="true">S</i>Lưu thay đổi</button></div>
+	        </section>
+
+	        <section class="seller-panel hidden" id="seller-tab-assets">
+	          <header class="seller-panel-header"><div><h3>Tài nguyên thương hiệu</h3><p>PNG, JPG hoặc WebP · tối đa 2 MB.</p></div></header>
+	          <div class="asset-grid">
+	            <article class="asset-card"><h4>Logo shop</h4><p>Ảnh vuông hoặc gọn dùng ở đầu gian hàng.</p><div id="sLogoPreview" class="asset-preview"><span id="sLogoEmpty">Chưa tải logo</span><img id="sLogoImg" class="hidden" alt="Shop logo preview" /></div><input class="file-input" type="file" id="sLogoFile" accept="image/png,image/jpeg,image/webp" onchange="updateSellerFileLabel('sLogoFile','sLogoFileName')" /><label class="file-picker" for="sLogoFile"><i data-lucide="image-up" class="icon icon-sm" aria-hidden="true">+</i><span id="sLogoFileName">Chọn ảnh</span></label><button type="button" class="btn btn-primary btn-sm" id="sellerLogoUploadBtn" onclick="uploadSellerLogo()">Tải logo lên</button></article>
+	            <article class="asset-card"><h4>Mã QR thanh toán</h4><p>Ảnh QR rõ nét hiển thị cùng thông tin thanh toán.</p><div id="sQrPreview" class="asset-preview"><span id="sQrEmpty">Chưa tải QR</span><img id="sQrImg" class="hidden" alt="Payment QR preview" /></div><input class="file-input" type="file" id="sQrFile" accept="image/png,image/jpeg,image/webp" onchange="updateSellerFileLabel('sQrFile','sQrFileName')" /><label class="file-picker" for="sQrFile"><i data-lucide="scan-line" class="icon icon-sm" aria-hidden="true">+</i><span id="sQrFileName">Chọn ảnh</span></label><button type="button" class="btn btn-primary btn-sm" id="sellerQrUploadBtn" onclick="uploadSellerQr()">Tải QR lên</button></article>
+	          </div>
+	        </section>
+
+	        <section class="seller-panel hidden" id="seller-tab-products">
+	          <header class="seller-panel-header"><div><h3>Sản phẩm</h3><p>Tạo tin đăng và quản lý sản phẩm của tài khoản này.</p></div></header>
+	          <div class="product-workspace">
+	            <form class="product-form-panel" onsubmit="event.preventDefault();addSellerProduct();">
+	              <div class="field-group"><label class="field-label" for="sProductName">Tên sản phẩm</label><input type="text" id="sProductName" placeholder="Tên sản phẩm" required /></div>
+	              <div class="field-group"><label class="field-label" for="sProductDesc">Mô tả</label><textarea id="sProductDesc" placeholder="Mô tả ngắn..."></textarea></div>
+	              <div class="settings-grid"><div class="field-group"><label class="field-label" for="sProductPrice">Giá (đ)</label><input type="number" min="0" id="sProductPrice" placeholder="0" /></div><div class="field-group"><label class="field-label" for="sProductCat">Danh mục</label><input type="text" id="sProductCat" placeholder="VPS, Tool..." /></div></div>
+	              <div class="field-group"><label class="field-label">Hình ảnh</label><input class="file-input" type="file" id="sProductImg" accept="image/png,image/jpeg,image/webp" onchange="updateSellerFileLabel('sProductImg','sProductImgFileName')" /><label class="file-picker" for="sProductImg"><i data-lucide="image-plus" class="icon icon-sm" aria-hidden="true">+</i><span id="sProductImgFileName">Ảnh tùy chọn</span></label></div>
+	              <button type="submit" class="btn btn-primary" id="sellerProductSaveBtn" style="width:100%;"><i data-lucide="plus" class="icon icon-sm" aria-hidden="true">+</i>Thêm sản phẩm</button>
+	            </form>
+	            <div class="seller-inventory"><div class="seller-list-toolbar"><strong>Sản phẩm của bạn <span id="sellerProductCount"></span></strong><label class="product-search" for="sellerProductSearch"><i data-lucide="search" class="icon icon-sm" aria-hidden="true">?</i><input type="search" id="sellerProductSearch" placeholder="Tìm trong kho" autocomplete="off" oninput="searchSellerProducts(this.value)" /></label></div><div class="seller-product-list" id="sellerProductList"></div></div>
+	          </div>
+	        </section>
+	      </div>
+	      </div>
+	    </div>
+	</div>
+
+	<script>
+	/* ── State ── */
+	var shopToken = localStorage.getItem('shopToken') || '';
+	var allProducts = [];
+	var currentCat = 'all';
+	var productQuery = '';
+	var sellerProducts = [];
+	var sellerProductQuery = '';
+	var activeSellerTab = 'settings';
+	var sellerProfile = {};
+	var API = '/api/';
+
+	function renderShopIcons() {
+	  if (window.lucide) window.lucide.createIcons();
+	}
+
+	/* ── Toast ── */
+	function toast(msg, err) {
+	  var c = document.getElementById('toastBox');
+	  var t = document.createElement('div');
+	  t.className = 'toast' + (err ? ' toast-err' : '');
+	  t.textContent = msg;
+	  c.appendChild(t);
+	  setTimeout(function(){ t.remove(); }, 3000);
+	}
+
+	/* ── Fetch helper ── */
+	function api(path, data, method) {
+	  var opts = { method: method || 'POST', headers: {} };
+	  if (data && !(data instanceof FormData)) {
+	    opts.headers['Content-Type'] = 'application/json';
+	    opts.body = JSON.stringify(Object.assign({}, data, shopToken ? { shopToken: shopToken } : {}));
+	  } else if (data instanceof FormData) {
+	    if (shopToken) opts.headers['shopToken'] = shopToken;
+    opts.body = data;
+	  }
+	  return fetch(API + path, opts).then(function(r) {
+	    var ct = r.headers.get('content-type') || '';
+	    if (!ct.includes('json')) return r.text().then(function(t){ throw new Error(t || 'HTTP ' + r.status); });
+	    return r.json();
+	  }).then(function(j) { if (j.error) throw new Error(j.error); return j; });
+	}
+
+	/* ── Load Shop Config (public) ── */
+	function loadShopConfig() {
+	  fetch(API + 'config').then(function(r){ return r.json(); }).then(function(d) {
+	    var banner = document.getElementById('shopBanner');
+	    if (d.bannerText) {
+	      var txt = d.bannerText;
+	      var track = document.getElementById('bannerTrack');
+	      var safeText = escHtml(txt);
+	      track.innerHTML = '<span>' + safeText + '</span><span>' + safeText + '</span><span>' + safeText + '</span><span>' + safeText + '</span>';
+	      banner.classList.remove('hidden');
+	      document.body.classList.add('banner-on');
+	    } else {
+	      banner.classList.add('hidden');
+	      document.body.classList.remove('banner-on');
+	    }
+	    var logoUrl = safeShopUrl(d.logoUrl);
+	    if (logoUrl) {
+	      var ld = document.getElementById('logoDisplay');
+	      var nextLogoUrl = logoUrl + '?_t=' + Date.now();
+	      if (ld.tagName === 'IMG') {
+	        ld.src = nextLogoUrl;
+	      } else {
+	        ld.outerHTML = '<img class="logo-img" id="logoDisplay" src="' + escAttr(nextLogoUrl) + '" onerror="this.outerHTML=&#39;<div class=&quot;logo-placeholder&quot; id=&quot;logoDisplay&quot;>T</div>&#39;" />';
+	      }
+	    }
+	    var qrUrl = safeShopUrl(d.qrUrl);
+	    if (qrUrl) {
+	      var qb = document.getElementById('qrBox');
+	      qb.innerHTML = '<img src="' + escAttr(qrUrl + '?_t=' + Date.now()) + '" /><div class="qr-label">Quét QR để thanh toán</div>';
+	      document.getElementById('paymentSection').classList.remove('hidden');
+	    }
+	    if (d.bankName) document.getElementById('bankName').textContent = d.bankName;
+	    if (d.bankAccount) document.getElementById('bankAccount').textContent = d.bankAccount;
+	    if (d.bankHolder) document.getElementById('bankHolder').textContent = d.bankHolder;
+	    if (d.bankName || d.bankAccount) document.getElementById('paymentSection').classList.remove('hidden');
+	  }).catch(function(){});
+	}
+
+	/* ── Load Products (public) ── */
+	function loadProducts() {
+	  api('products', null, 'GET').then(function(d) {
+	    allProducts = d.products || [];
+	    renderCategories();
+	    renderProducts();
+	  }).catch(function(e) {
+	    document.getElementById('emptyState').classList.remove('hidden');
+	  });
+	}
+
+	function renderCategories() {
+	  var cats = {};
+	  allProducts.forEach(function(p) {
+	    var c = (p.category || 'general').toLowerCase();
+	    cats[c] = (cats[c] || 0) + 1;
+	  });
+	  var tabs = document.getElementById('catTabs');
+	  if (currentCat !== 'all' && !cats[currentCat]) currentCat = 'all';
+	  tabs.innerHTML = '';
+	  function addCategoryTab(value, label, count) {
+	    var item = document.createElement('button');
+	    item.type = 'button';
+	    item.className = 'cat-tab' + (currentCat === value ? ' active' : '');
+	    item.dataset.cat = value;
+	    item.textContent = label + ' (' + count + ')';
+	    item.addEventListener('click', function(){ filterCategory(value, item); });
+	    tabs.appendChild(item);
+	  }
+	  addCategoryTab('all', 'Tất cả', allProducts.length);
+	  Object.keys(cats).forEach(function(c) { addCategoryTab(c, c, cats[c]); });
+	}
+
+	function filterCategory(cat, el) {
+	  currentCat = cat;
+	  document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
+	  if (el) el.classList.add('active');
+	  renderProducts();
+	}
+
+	function searchProducts(value) {
+	  productQuery = String(value || '').trim().toLowerCase();
+	  renderProducts();
+	}
+
+	function renderProducts() {
+	  var grid = document.getElementById('productGrid');
+	  var empty = document.getElementById('emptyState');
+	  var filtered = currentCat === 'all' ? allProducts : allProducts.filter(function(p){ return (p.category || 'general').toLowerCase() === currentCat; });
+	  if (productQuery) filtered = filtered.filter(function(p) {
+	    return [p.name, p.description, p.category].map(function(value){ return String(value || '').toLowerCase(); }).join(' ').includes(productQuery);
+	  });
+	  document.getElementById('productCount').textContent = '(' + filtered.length + ' sản phẩm)';
+	  if (filtered.length === 0) {
+	    grid.innerHTML = '';
+	    document.getElementById('emptyStateText').textContent = allProducts.length ? 'Không tìm thấy sản phẩm phù hợp.' : 'Chưa có sản phẩm nào. Quay lại sau nhé!';
+	    empty.classList.remove('hidden');
+	    return;
+	  }
+	  empty.classList.add('hidden');
+	  grid.innerHTML = filtered.map(function(p, i) {
+	    var priceText = p.price > 0 ? formatPrice(p.price) : 'Miễn phí';
+	    var priceClass = p.price > 0 ? '' : ' free';
+	    var imageUrl = safeShopUrl(p.image_url);
+	    var imgHtml = imageUrl ? '<img class="product-img" src="' + escAttr(imageUrl) + '" alt="" loading="lazy"/>' : '<div class="product-img-placeholder"><i data-lucide="package" class="icon" aria-hidden="true">P</i></div>';
+	    var catText = p.category || 'general';
+	    return '<div class="product-card" style="animation-delay:' + (i * 0.05) + 's">' + imgHtml + '<div class="product-info"><div class="product-name">' + escHtml(p.name) + '</div><div class="product-desc">' + escHtml(p.description || '') + '</div><div class="product-bottom"><div class="product-price' + priceClass + '">' + priceText + '</div><div class="product-cat">' + escHtml(catText) + '</div></div></div></div>';
+	  }).join('');
+	  renderShopIcons();
+	}
+
+	function formatPrice(n) {
+	  return new Intl.NumberFormat('vi-VN').format(n) + 'đ';
+	}
+
+	function escHtml(s) {
+	  var d = document.createElement('div');
+	  d.textContent = s;
+	  return d.innerHTML;
+	}
+
+	function escAttr(s) {
+	  return escHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+	}
+
+	function safeShopUrl(value) {
+	  try {
+	    var parsed = new URL(String(value || ''), location.origin);
+	    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '';
+	  } catch (e) {
+	    return '';
+	  }
+	}
+
+	function copyText(id) {
+	  var el = document.getElementById(id);
+	  if (!el) return;
+	  navigator.clipboard.writeText(el.textContent).then(function(){ toast('Đã copy!'); }).catch(function(){});
+	}
+
+	/* ── Seller Modal ── */
+	function openSellerModal() {
+	  document.getElementById('sellerModal').classList.add('open');
+	  document.body.classList.add('modal-open');
+	  if (shopToken) {
+	    showSellerDashboard();
+	  } else {
+	    document.getElementById('sellerPanel').classList.add('auth-mode');
+	    document.getElementById('sellerLoginForm').classList.remove('hidden');
+	    document.getElementById('sellerDashboard').classList.add('hidden');
+	    document.getElementById('modalTitle').textContent = 'Quyền seller';
+	    document.getElementById('modalSubtitle').textContent = 'Quản lý gian hàng TrueTeam';
+	  }
+	  renderShopIcons();
+	}
+
+	function closeSellerModal() {
+	  document.getElementById('sellerModal').classList.remove('open');
+	  document.body.classList.remove('modal-open');
+	}
+
+	function doSellerLogin() {
+	  var email = document.getElementById('sellerEmail').value.trim();
+	  var pass = document.getElementById('sellerPass').value;
+	  if (!email || !pass) return toast('Nhập email và mật khẩu', true);
+	  setSellerLoading('sellerLoginBtn', true, 'Đang đăng nhập...');
+	  api('login', { email: email, password: pass }).then(function(d) {
+	    shopToken = d.shopToken;
+	    sellerProfile = d.profile || d;
+	    localStorage.setItem('shopToken', shopToken);
+	    showSellerDashboard();
+	    toast('Đăng nhập thành công!');
+	  }).catch(function(e) { toast(e.message, true); }).finally(function(){ setSellerLoading('sellerLoginBtn', false); });
+	}
+
+	function showSellerDashboard() {
+	  document.getElementById('sellerPanel').classList.remove('auth-mode');
+	  document.getElementById('sellerLoginForm').classList.add('hidden');
+	  document.getElementById('sellerDashboard').classList.remove('hidden');
+	  document.getElementById('modalTitle').textContent = 'Không gian seller';
+	  document.getElementById('modalSubtitle').textContent = 'Cài đặt, tài nguyên thương hiệu và kho hàng';
+	  document.getElementById('sellerIdentityName').textContent = sellerProfile.username || sellerProfile.email || 'Quản lý cửa hàng';
+	  document.getElementById('sellerIdentityRole').textContent = sellerProfile.role || 'Đã xác thực';
+	  sellerProducts = [];
+	  sellerProductQuery = '';
+	  document.getElementById('sellerProductSearch').value = '';
+	  renderSellerProducts();
+	  var firstTab = document.querySelector('[data-seller-tab="settings"]');
+	  switchSellerTab(activeSellerTab || 'settings', document.querySelector('[data-seller-tab="' + (activeSellerTab || 'settings') + '"]') || firstTab);
+	  loadSellerSettings();
+	  loadSellerProducts();
+	  renderShopIcons();
+	}
+
+	function doSellerLogout() {
+	  var logoutRequest = shopToken ? api('logout', {}) : Promise.resolve();
+	  shopToken = '';
+	  sellerProfile = {};
+	  sellerProducts = [];
+	  sellerProductQuery = '';
+	  localStorage.removeItem('shopToken');
+	  document.getElementById('sellerPanel').classList.add('auth-mode');
+	  document.getElementById('sellerLoginForm').classList.remove('hidden');
+	  document.getElementById('sellerDashboard').classList.add('hidden');
+	  document.getElementById('sellerPass').value = '';
+	  document.getElementById('sellerProductSearch').value = '';
+	  renderSellerProducts();
+	  document.getElementById('modalTitle').textContent = 'Quyền seller';
+	  document.getElementById('modalSubtitle').textContent = 'Quản lý gian hàng TrueTeam';
+	  toast('Đã đăng xuất');
+	  logoutRequest.catch(function(){});
+	  renderShopIcons();
+	}
+
+	function switchSellerTab(name, button) {
+	  activeSellerTab = name;
+	  ['settings','assets','products'].forEach(function(tab) {
+	    document.getElementById('seller-tab-' + tab).classList.toggle('hidden', tab !== name);
+	  });
+	  document.querySelectorAll('[data-seller-tab]').forEach(function(tab) { tab.classList.toggle('active', tab.dataset.sellerTab === name); });
+	  if (button) button.classList.add('active');
+	  renderShopIcons();
+	}
+
+	function setSellerLoading(id, loading, busyText) {
+	  var button = document.getElementById(id);
+	  if (!button) return;
+	  if (!button.dataset.defaultHtml) button.dataset.defaultHtml = button.innerHTML;
+	  button.disabled = loading;
+	  button.innerHTML = loading ? (busyText || 'Đang xử lý...') : button.dataset.defaultHtml;
+	  renderShopIcons();
+	}
+
+	function validateSellerImage(file) {
+	  if (!file) return false;
+	  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) { toast('Chỉ hỗ trợ PNG, JPG hoặc WebP', true); return false; }
+	  if (file.size > 2 * 1024 * 1024) { toast('Ảnh tối đa 2 MB', true); return false; }
+	  return true;
+	}
+
+	function updateSellerFileLabel(inputId, labelId) {
+	  var input = document.getElementById(inputId);
+	  var file = input.files && input.files[0];
+	  document.getElementById(labelId).textContent = file ? file.name : 'Chọn ảnh';
+	  if (!file || !validateSellerImage(file)) {
+	    if (file) input.value = '';
+	    document.getElementById(labelId).textContent = inputId === 'sProductImg' ? 'Ảnh tùy chọn' : 'Chọn ảnh';
+	    return;
+	  }
+	  var map = { sLogoFile: ['sLogoImg','sLogoEmpty'], sQrFile: ['sQrImg','sQrEmpty'] };
+	  if (map[inputId]) {
+	    var image = document.getElementById(map[inputId][0]);
+	    var previewUrl = URL.createObjectURL(file);
+	    image.onload = function(){ URL.revokeObjectURL(previewUrl); image.onload = null; };
+	    image.src = previewUrl;
+	    image.classList.remove('hidden');
+	    document.getElementById(map[inputId][1]).classList.add('hidden');
+	  }
+	}
+
+	/* ── Seller: Load Settings ── */
+	function loadSellerSettings() {
+	  api('config', {}).then(function(d) {
+	    if (d.profile) {
+	      sellerProfile = d.profile;
+	      document.getElementById('sellerIdentityName').textContent = sellerProfile.username || sellerProfile.email || 'Quản lý cửa hàng';
+	      document.getElementById('sellerIdentityRole').textContent = sellerProfile.role || 'Đã xác thực';
+	    }
+	    document.getElementById('sBannerText').value = d.bannerText || '';
+	    document.getElementById('sBankName').value = d.bankName || '';
+	    document.getElementById('sBankAccount').value = d.bankAccount || '';
+	    document.getElementById('sBankHolder').value = d.bankHolder || '';
+	    if (d.hasLogo) {
+	      document.getElementById('sLogoImg').src = '/r2/shop-logo.png?_t=' + Date.now();
+	      document.getElementById('sLogoImg').classList.remove('hidden');
+	      document.getElementById('sLogoEmpty').classList.add('hidden');
+	    }
+	    if (d.hasQr) {
+	      document.getElementById('sQrImg').src = '/r2/shop-qr.png?_t=' + Date.now();
+	      document.getElementById('sQrImg').classList.remove('hidden');
+	      document.getElementById('sQrEmpty').classList.add('hidden');
+	    }
+	  }).catch(function(e) { toast(e.message, true); });
+	}
+
+	function saveSellerSettings() {
+	  setSellerLoading('sellerSettingsSaveBtn', true, 'Đang lưu...');
+	  api('save-bank-info', {
+	    bannerText: document.getElementById('sBannerText').value.trim(),
+	    bankName: document.getElementById('sBankName').value.trim(),
+	    bankAccount: document.getElementById('sBankAccount').value.trim(),
+	    bankHolder: document.getElementById('sBankHolder').value.trim(),
+	  }).then(function() {
+	    toast('Đã lưu cài đặt!');
+	    loadShopConfig();
+	  }).catch(function(e) { toast(e.message, true); }).finally(function(){ setSellerLoading('sellerSettingsSaveBtn', false); });
+	}
+
+	/* ── Seller: Upload Logo ── */
+	function uploadSellerLogo() {
+	  var file = document.getElementById('sLogoFile').files[0];
+	  if (!file) return toast('Chọn file logo', true);
+	  if (!validateSellerImage(file)) return;
+	  setSellerLoading('sellerLogoUploadBtn', true, 'Đang tải lên...');
+	  var fd = new FormData(); fd.append('file', file);
+	  fetch(API + 'upload-logo', { method: 'POST', headers: { shopToken: shopToken }, body: fd })
+	  .then(function(r) { return r.json(); }).then(function(j) {
+	    if (j.error) throw new Error(j.error);
+	    toast('Logo đã upload!');
+	    document.getElementById('sLogoFile').value = '';
+	    document.getElementById('sLogoFileName').textContent = 'Chọn ảnh';
+	    loadSellerSettings();
+	    loadShopConfig();
+	  }).catch(function(e) { toast(e.message, true); }).finally(function(){ setSellerLoading('sellerLogoUploadBtn', false); });
+	}
+
+	/* ── Seller: Upload QR ── */
+	function uploadSellerQr() {
+	  var file = document.getElementById('sQrFile').files[0];
+	  if (!file) return toast('Chọn file QR', true);
+	  if (!validateSellerImage(file)) return;
+	  setSellerLoading('sellerQrUploadBtn', true, 'Đang tải lên...');
+	  var fd = new FormData(); fd.append('file', file);
+	  fetch(API + 'upload-qr', { method: 'POST', headers: { shopToken: shopToken }, body: fd })
+	  .then(function(r) { return r.json(); }).then(function(j) {
+	    if (j.error) throw new Error(j.error);
+	    toast('QR đã upload!');
+	    document.getElementById('sQrFile').value = '';
+	    document.getElementById('sQrFileName').textContent = 'Chọn ảnh';
+	    loadSellerSettings();
+	    loadShopConfig();
+	  }).catch(function(e) { toast(e.message, true); }).finally(function(){ setSellerLoading('sellerQrUploadBtn', false); });
+	}
+
+	/* ── Seller: Add Product ── */
+	function addSellerProduct() {
+	  var name = document.getElementById('sProductName').value.trim();
+	  var desc = document.getElementById('sProductDesc').value.trim();
+	  var price = parseInt(document.getElementById('sProductPrice').value) || 0;
+	  var cat = document.getElementById('sProductCat').value.trim() || 'general';
+	  var file = document.getElementById('sProductImg').files[0];
+	  if (!name) return toast('Nhập tên sản phẩm', true);
+	  if (file && !validateSellerImage(file)) return;
+	  setSellerLoading('sellerProductSaveBtn', true, 'Đang thêm sản phẩm...');
+	  var imageUpload = Promise.resolve('');
+	  if (file) {
+	    var fd = new FormData();
+	    fd.append('file', file);
+	    imageUpload = fetch(API + 'upload-product-image', { method: 'POST', headers: { shopToken: shopToken }, body: fd }).then(function(r) { return r.json(); }).then(function(j) {
+	      if (j.error) throw new Error(j.error);
+	      return j.url || '';
+	    });
+	  }
+	  imageUpload.then(function(imageUrl) {
+	    return api('add-product', { name: name, description: desc, price: price, category: cat, imageUrl: imageUrl });
+	  }).then(function() {
+	    toast('Đã thêm sản phẩm!');
+	    document.getElementById('sProductName').value = '';
+	    document.getElementById('sProductDesc').value = '';
+	    document.getElementById('sProductPrice').value = '';
+	    document.getElementById('sProductCat').value = '';
+	    document.getElementById('sProductImg').value = '';
+	    document.getElementById('sProductImgFileName').textContent = 'Ảnh tùy chọn';
+	    loadSellerProducts();
+	    loadProducts();
+	  }).catch(function(e) { toast(e.message, true); }).finally(function(){ setSellerLoading('sellerProductSaveBtn', false); });
+	}
+
+	/* ── Seller: Load Products ── */
+	function loadSellerProducts() {
+	  api('my-products', {}).then(function(d) {
+	    sellerProducts = d.products || [];
+	    renderSellerProducts();
+	  }).catch(function(e){
+	    sellerProducts = [];
+	    renderSellerProducts();
+	    toast(e.message, true);
+	  });
+	}
+
+	function searchSellerProducts(value) {
+	  sellerProductQuery = String(value || '').trim().toLowerCase();
+	  renderSellerProducts();
+	}
+
+	function renderSellerProducts() {
+	  var list = document.getElementById('sellerProductList');
+	  var filtered = sellerProducts.filter(function(p) {
+	    if (!sellerProductQuery) return true;
+	    return [p.name, p.description, p.category].map(function(value){ return String(value || '').toLowerCase(); }).join(' ').includes(sellerProductQuery);
+	  });
+	  document.getElementById('sellerProductCount').textContent = filtered.length === sellerProducts.length ? '(' + sellerProducts.length + ')' : '(' + filtered.length + '/' + sellerProducts.length + ')';
+	  if (!filtered.length) {
+	    list.innerHTML = '<div class="seller-empty">' + (sellerProducts.length ? 'Không tìm thấy sản phẩm phù hợp.' : 'Chưa có sản phẩm.') + '</div>';
+	    return;
+	  }
+	  list.innerHTML = filtered.map(function(p) {
+	    var imageUrl = safeShopUrl(p.image_url);
+	    var imgTag = imageUrl ? '<img src="' + escAttr(imageUrl) + '" alt="" />' : '<div class="seller-product-placeholder"><i data-lucide="package" class="icon" aria-hidden="true">P</i></div>';
+	    var id = escAttr(p.id);
+	    return '<div class="seller-product-item">' + imgTag + '<div class="sp-info"><div class="sp-name">' + escHtml(p.name) + '</div><div class="sp-meta"><span class="sp-price">' + (p.price > 0 ? formatPrice(p.price) : 'Miễn phí') + '</span> · ' + escHtml(p.category || 'general') + '</div></div><button type="button" class="btn btn-red seller-delete" onclick="deleteSellerProduct(&quot;' + id + '&quot;)" aria-label="Xóa ' + escAttr(p.name) + '" title="Xóa sản phẩm"><i data-lucide="trash-2" class="icon icon-sm" aria-hidden="true">x</i></button></div>';
+	  }).join('');
+	  renderShopIcons();
+	}
+
+		function shopConfirmDialog(msg) {
+		  return new Promise(function(resolve) {
+		    var overlay = document.getElementById('shopConfirmOverlay');
+		    if (overlay) overlay.remove();
+		    overlay = document.createElement('div');
+		    overlay.className = 'modal-overlay open';
+		    overlay.id = 'shopConfirmOverlay';
+		    overlay.setAttribute('role', 'dialog');
+		    overlay.setAttribute('aria-modal', 'true');
+		    overlay.setAttribute('aria-label', 'Xác nhận');
+		    overlay.innerHTML = '<div class="modal auth-mode" style="height:auto;"><div class="modal-header"><div class="modal-title-wrap"><span class="modal-title-icon">!</span><div><h2>Xác nhận</h2><p id="shopConfirmMsg"></p></div></div>'
+		      + '<button type="button" class="modal-close" id="shopConfirmCancelX" aria-label="Đóng hộp thoại xác nhận">x</button></div>'
+		      + '<div style="padding:18px 20px 20px;display:flex;gap:8px;justify-content:flex-end;"><button type="button" class="btn btn-outline" id="shopConfirmCancel">Hủy</button>'
+		      + '<button type="button" class="btn btn-red" id="shopConfirmOk">Xác nhận</button></div></div>';
+		    document.body.appendChild(overlay);
+		    document.body.classList.add('modal-open');
+		    document.getElementById('shopConfirmMsg').textContent = msg;
+		    function done(value) {
+		      document.getElementById('shopConfirmOk').removeEventListener('click', onOk);
+		      document.getElementById('shopConfirmCancel').removeEventListener('click', onCancel);
+		      document.getElementById('shopConfirmCancelX').removeEventListener('click', onCancel);
+		      overlay.removeEventListener('click', onBackdrop);
+		      document.removeEventListener('keydown', onKey);
+		      overlay.remove();
+		      document.body.classList.remove('modal-open');
+		      resolve(value);
+		    }
+		    function onOk() { done(true); }
+		    function onCancel() { done(false); }
+		    function onBackdrop(e) { if (e.target === overlay) done(false); }
+		    function onKey(e) { if (e.key === 'Escape') done(false); }
+		    document.getElementById('shopConfirmOk').addEventListener('click', onOk);
+		    document.getElementById('shopConfirmCancel').addEventListener('click', onCancel);
+		    document.getElementById('shopConfirmCancelX').addEventListener('click', onCancel);
+		    overlay.addEventListener('click', onBackdrop);
+		    document.addEventListener('keydown', onKey);
+		    setTimeout(function(){ try { document.getElementById('shopConfirmOk').focus(); } catch (e) {} }, 0);
+		  });
+		}
+		function confirmDialog(msg) { return shopConfirmDialog(msg); }
+
+		async function deleteSellerProduct(id) {
+		  if (!(await confirmDialog('Xóa sản phẩm này?'))) return;
+	  api('delete-product', { productId: id }).then(function() {
+	    toast('Đã xóa sản phẩm!');
+	    loadSellerProducts();
+	    loadProducts();
+	  }).catch(function(e) { toast(e.message, true); });
+	}
+
+	/* ── Init ── */
+	(function init() {
+	  var sellerModal = document.getElementById('sellerModal');
+	  sellerModal.addEventListener('click', function(event){ if (event.target === sellerModal) closeSellerModal(); });
+	  document.addEventListener('keydown', function(event){ if (event.key === 'Escape') closeSellerModal(); });
+	  loadShopConfig();
+	  loadProducts();
+	  if (shopToken) {
+	    api('config', {}).then(function(d){
+	      if (d.profile) sellerProfile = d.profile;
+	    }).catch(function() {
+      shopToken = '';
+      localStorage.removeItem('shopToken');
+    });
+	  }
+	})();
+	</script>
+	<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+	<script>renderShopIcons();</script>
+	</body>
+	</html>
